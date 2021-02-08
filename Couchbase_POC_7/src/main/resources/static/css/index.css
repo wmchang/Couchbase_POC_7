@@ -1,0 +1,140 @@
+@charset "EUC-KR";
+
+#header {
+	width: 100%;
+	height: 100px;
+	background-color: #4287d6;
+	display: flex;
+	justify-content: center;
+}
+
+#header a img {
+	width: 80px;
+	height: 96px;
+}
+
+#header-tab {
+	display: flex;
+	position: relative;
+	justify-content: center;
+	align-items: stretch;
+	background-color: #669ee0;
+	padding: 5px;
+}
+
+#header-tab a.selected {
+	background-color: #79aae4;
+}
+col-lg-2{
+	margin-top:5px;
+}
+h4{
+	border-left: 0.4rem solid #64cc17;
+}
+.row{
+	margin:20px;
+}
+.menu a {
+	font-size: .875rem;
+	font-weight: 400;
+	cursor: pointer;
+	padding: 0.35em 1em 0.35em 1em;
+	color: #fff;
+	position: relative;
+	text-decoration: none;
+	font-size: 17px;
+}
+
+.menu a:hover {
+	font-size: 20px;
+	background-color: #79aae4;
+	color:#fff;
+}
+
+.dropbtn {
+  background-color: #ea2129;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #79aae4;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+	background-color: #669ee0;
+}
+
+.dropdown:hover .dropdown-content {
+	display: block;
+}
+
+.dropdown:hover .dropbtn {
+	background-color: #79aae4;
+}
+
+input[type=text],[type=password]{
+	width:150px;
+	margin-bottom:10px;
+}
+
+input[type=radio]{
+	margin-top:10px;
+}
+
+select{
+	width:150px;
+	height:40px;
+	margin-top:10px;
+	margin-bottom:10px;
+}
+
+.borderDiv{
+	border:1px dashed gray;
+	padding-bottom:10px;
+}
+
+.borderDiv div{
+	margin: 10px 0px 0px 0px;
+}
+
+.container-fluid{
+	margin-top:2%;
+}
+
+.table tr{
+	text-align:center;
+}
+
+.flexDiv > div{
+	display:flex;
+	flex-direction:column;
+	flex-basis: 0;
+  	flex-grow: 1;
+}
+.flexDivCenter > div{
+	display:flex;
+	flex-direction:column;
+	flex-basis: 0;
+  	flex-grow: 1;
+    align-items: center;
+}
