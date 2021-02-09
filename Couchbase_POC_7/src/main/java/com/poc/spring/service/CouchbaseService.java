@@ -45,15 +45,20 @@ import com.couchbase.client.java.kv.MutationResult;
 import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import com.couchbase.client.java.manager.bucket.BucketType;
+import com.couchbase.client.java.manager.collection.CollectionSpec;
+import com.couchbase.client.java.manager.collection.ScopeSpec;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.search.SearchOptions;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.queries.MatchQuery;
 import com.couchbase.client.java.search.result.SearchResult;
 import com.couchbase.client.java.search.result.SearchRow;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.poc.spring.dto.BucketSettingDTO;
+import com.poc.spring.dto.CompactionDTO;
 import com.poc.spring.dto.ConnectDTO;
+import com.poc.spring.dto.SettingDTO;
 import com.poc.spring.util.ServiceUtils;
 
 @Service
@@ -359,9 +364,7 @@ public class CouchbaseService {
 		return resultMap;
 	}
 	
-	
-	// Bucket
-	public List<Object> getBucketList(){
+	public List<Object> getBucketListDetail(){
 		// curl -u Administrator:password http://10.5.2.54:8091/pools/default/buckets
 		
 		if(dto == null)
@@ -414,6 +417,28 @@ public class CouchbaseService {
 		
 		return list;
 	}
+	
+	// Bucket
+	public List<String> getBucketList(){
+		// curl -u Administrator:admin123 http://10.5.2.54:8091/pools/default/buckets
+		
+		if(dto == null)
+			return null;
+		else if(bucket == null)
+			return null;
+		
+		Map<String,BucketSettings> map = cluster.buckets().getAllBuckets();
+		List<String> bucketList = new ArrayList<String>();
+		
+		
+		Iterator<String> i= map.keySet().iterator();
+		while(i.hasNext()) {
+			bucketList.add(i.next());
+			
+		}
+		
+		return bucketList;
+	}
 
 	public String createBucket(HttpServletRequest request) {
 		
@@ -458,6 +483,49 @@ public class CouchbaseService {
 		return "삭제되었습니다.";
 	}
 	
+	public Map<String, Object> getScopeCollection(HttpServletRequest request) {
+		
+		if(dto == null)
+			return null;
+		else if(bucket == null)
+			return null;
+		
+		String bucketName = request.getParameter("bucketName");
+		if(bucketName==null)
+			bucketName = bucket.name();
+		
+		String scopeName = request.getParameter("scopeName");
+		if(scopeName == null)
+			scopeName ="_default";
+	
+		
+		List<String> scopeList = new ArrayList<String>();
+		List<String> collectionList = new ArrayList<String>();
+		Map<String,Object> map = new HashMap<String,Object>();
+		Iterator<ScopeSpec> scopeI = cluster.bucket(bucketName).collections().getAllScopes().iterator();
+		
+		while(scopeI.hasNext()) {
+			
+			ScopeSpec scope = scopeI.next();
+			
+			Iterator<CollectionSpec> colI = scope.collections().iterator();
+			
+			scopeList.add(scope.name());
+			
+			while(colI.hasNext()) {
+				CollectionSpec col = colI.next();
+				if(col.scopeName().equals(scopeName)) {
+					collectionList.add(col.name());
+				}
+			}
+		}
+		
+		map.put("scopeList", scopeList);
+		map.put("collectionList", collectionList);
+		
+		return map;
+	}
+	
 	// Document
 	public Object getDocumentList(HttpServletRequest request){
 		
@@ -472,11 +540,14 @@ public class CouchbaseService {
 			else
 				limit = request.getParameter("limit");
 			
-			String bucketName;
+			String bucketName = request.getParameter("bucketName");
+			String scopeName = request.getParameter("scopeName");
+			String collectionName = request.getParameter("collectionName");
+			
 			if(request.getParameter("bucketName")==null)
 				bucketName = bucket.name();
-			else
-				bucketName = request.getParameter("bucketName");
+			if(scopeName == null)
+				scopeName = "_default";
 			
 			if(cluster.buckets().getBucket(bucketName).bucketType() == BucketType.MEMCACHED) {
 				
@@ -488,15 +559,23 @@ public class CouchbaseService {
 			 if(limit.length() < 0)
 				 limit = "30";
 			 
+			 
+			 
 			 statement.append("select *, meta(t).id from `");
 			 statement.append(bucketName);
-			 statement.append("` as t limit ");
+			 statement.append("`.");
+			 statement.append(scopeName);
+			 statement.append(".");
+			 statement.append(collectionName);
+			 statement.append(" as t limit ");
 			 statement.append(limit);
 			 System.out.println(statement);
 			 
 			 List<Object> list = new ArrayList<Object>();
 			 
 			 QueryResult result = cluster.query(statement.toString());
+			 
+			 System.out.println(cluster.query(statement.toString()));
 			 
 			 for(JsonObject row : result.rowsAsObject()) {
 	
@@ -510,7 +589,9 @@ public class CouchbaseService {
 		catch(PlanningFailureException e) {
 			return "NotExistsIndex";
 		}
+		
 	}
+
 
 	public Object addDocument(HttpServletRequest request){
 
@@ -540,6 +621,7 @@ public class CouchbaseService {
 		return "문서가 생성되었습니다.";
 	}
 
+
 	public Object documentUpsert(HttpServletRequest request) throws Exception{
 		
 		String documentId = request.getParameter("documentId");
@@ -561,6 +643,7 @@ public class CouchbaseService {
 		return "문서 '"+documentId + "' 가 정상적으로 변경되었습니다.";
 	}
 	
+
 	public Object getDocumentDetails(String documentId,String bucketName) {
 
 		StringBuilder statement = new StringBuilder();
@@ -594,6 +677,7 @@ public class CouchbaseService {
 		return documentDetails;
 	}
 	
+
 	public Object dropDocument(String bucketName,String documentId) {
 		
 		MutationResult result = cluster.bucket(bucketName).defaultCollection().remove(documentId);
@@ -603,6 +687,7 @@ public class CouchbaseService {
 	}
 	
 	// Query
+
 	public Object getQueryResult(HttpServletRequest request) throws Exception {
 
 		try {
@@ -628,6 +713,7 @@ public class CouchbaseService {
 	}
 
 	// FTS 
+
 	public Object getFTIList() {
 		
 		if(dto == null)
@@ -674,6 +760,7 @@ public class CouchbaseService {
 		return list;
 	}
 
+	
 	public Object getFTSResult(HttpServletRequest request) {
 		
 		String indexName = request.getParameter("indexName");
@@ -692,6 +779,7 @@ public class CouchbaseService {
 	}
 	
 	// Making Random Data
+	
 	public Object makeRandomData(HttpServletRequest request) throws Exception {
 
 		int docSize = Integer.parseInt(request.getParameter("docSize"));
@@ -713,6 +801,7 @@ public class CouchbaseService {
 	}
 	
 	// Create Primary Index
+	
 	public String createPrimaryIndex(HttpServletRequest request) {
 		
 		String bucketName = request.getParameter("bucketName");
@@ -752,6 +841,8 @@ public class CouchbaseService {
 			 return "IndexFailureException";
 		 }
 	}
+	
+	// Upload File
 	
 	public Map<String, Object> uploadFile(MultipartHttpServletRequest mRequest) throws Exception {
 		
@@ -849,6 +940,8 @@ public class CouchbaseService {
 		return resultMap;
 	}
 
+	// Log
+	
 	public List<Object> getLogs() {
 		
 		// curl -v -X GET -u Administrator:admin123 http://localhost:8091/sasl_logs/[logs-name]
@@ -877,6 +970,221 @@ public class CouchbaseService {
 		return logList;
 	}
 
+	// Settings
+	
+	public Object setSettings(SettingDTO settingDTO){
+		
+		// https://docs.couchbase.com/server/6.5/manage/manage-settings/general-settings.html#configure-general-settings-with-the-rest-api
+		
+		if(dto == null)
+			return "서버를 연결시켜주십시오.";
+		try {
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(settingDTO));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		
+		StringBuilder baseCommand = new StringBuilder();
+		baseCommand.append("curl -v -X POST -u ");
+		baseCommand.append(dto.getUsername());
+		baseCommand.append(":");
+		baseCommand.append(dto.getPassword());
+		baseCommand.append(" http://");
+		baseCommand.append(dto.getHostname());
+		baseCommand.append(":");
+		baseCommand.append(dto.getPortNumber());
+		
+		StringBuilder clusterCommand = new StringBuilder();
+		clusterCommand.append(baseCommand);
+		clusterCommand.append("/pools/default -d clusterName=");
+		clusterCommand.append(settingDTO.getClusterName());
+		clusterCommand.append(" -d memoryQuota=");
+		clusterCommand.append(settingDTO.getDataServiceQuota());
+		clusterCommand.append(" -d indexMemoryQuota=");
+		clusterCommand.append(settingDTO.getIndexServiceQuota());
+		clusterCommand.append(" -d ftsMemoryQuota=");
+		clusterCommand.append(settingDTO.getSearchServiceQuota());
+		clusterCommand.append(" -d cbasMemoryQuota=");
+		clusterCommand.append(settingDTO.getAnalyticsServiceQuota());
+		clusterCommand.append(" -d eventingMemoryQuota=");
+		clusterCommand.append(settingDTO.getEventingServiceQuota());
+		System.out.println(clusterCommand);
+		
+		StringBuilder noticeCommand = new StringBuilder();
+		noticeCommand.append(baseCommand);
+		noticeCommand.append("/settings/stats -d sendStats=");
+		noticeCommand.append(settingDTO.isNoticeUpdate());
+		System.out.println(noticeCommand);
+		
+		StringBuilder rebalanceCommand = new StringBuilder();
+		rebalanceCommand.append(baseCommand);
+		rebalanceCommand.append("/settings/retryRebalance -d enabled=");
+		rebalanceCommand.append(settingDTO.isRetryRebalance_Enable());
+		rebalanceCommand.append(" -d afterTimePeriod=");
+		rebalanceCommand.append(settingDTO.getRetryRebalance_afterTimePeriod());
+		rebalanceCommand.append(" -d maxAttempts=");
+		rebalanceCommand.append(settingDTO.getRetryRebalance_maxAttempts());
+		System.out.println(rebalanceCommand);
+		
+		StringBuilder nodeCommand = new StringBuilder();
+		nodeCommand.append(baseCommand);
+		nodeCommand.append("/settings/autoFailover -d enabled=");
+		nodeCommand.append(settingDTO.isAutoFailoverCheck());
+		nodeCommand.append(" -d timeout=");
+		nodeCommand.append(settingDTO.getFailoverSecondTime());
+		nodeCommand.append(" -d failoverOnDataDiskIssues[enabled]=");
+		nodeCommand.append(settingDTO.isAutoFailoverDataError());
+		nodeCommand.append(" -d failoverOnDataDiskIssues[timePeriod]=");
+		nodeCommand.append(settingDTO.getAutoFailoverDataErrorSecondTime());
+		nodeCommand.append(" -d failoverServerGroup=");
+		nodeCommand.append(settingDTO.isAutoFailoverServerGroup());
+		nodeCommand.append(" -d maxCount=");
+		nodeCommand.append(settingDTO.getXDCRMaximumProcesses());
+		nodeCommand.append(" -d canAbortRebalance=");
+		nodeCommand.append(settingDTO.isAutoFailoverStopRebalance());
+		System.out.println(nodeCommand);
+		
+		try {
+			serviceUtil.curlExcute(clusterCommand.toString());
+			serviceUtil.curlExcute(noticeCommand.toString());
+			serviceUtil.curlExcute(rebalanceCommand.toString());
+			serviceUtil.curlExcute(nodeCommand.toString());
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return "값이 잘못되었습니다.";
+		}
+		return "정상적으로 실행되었습니다.";
+		
+	}
+
+	public Object setCompactions(CompactionDTO compactions){
+		
+		if(dto == null)
+			return "먼저 서버를 연결해주십시오.";
+		try {
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(compactions));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		
+		StringBuilder baseCommand = new StringBuilder();
+		baseCommand.append("curl -i -X POST -u ");
+		baseCommand.append(dto.getUsername());
+		baseCommand.append(":");
+		baseCommand.append(dto.getPassword());
+		baseCommand.append(" http://");
+		baseCommand.append(dto.getHostname());
+		baseCommand.append(":");
+		baseCommand.append(dto.getPortNumber());
+		
+		StringBuilder compactionCommand = new StringBuilder();
+		compactionCommand.append(baseCommand);
+		compactionCommand.append("/controller/setAutoCompaction");
+		if(compactions.isFragmentationCheckDatabasePer()) {
+			compactionCommand.append(" -d databaseFragmentationThreshold[percentage]=");
+			compactionCommand.append(compactions.getFragmentationPercentDatabase());
+		}
+		if(compactions.isFragmentationCheckDatabaseMB()) {
+			compactionCommand.append(" -d databaseFragmentationThreshold[size]=");
+			int mb = Integer.parseInt(compactions.getFragmentationMBDatabase());
+			compactionCommand.append(mb*1024*1024);
+		}
+		if(compactions.isFragmentationCheckViewPer()) {
+			compactionCommand.append(" -d viewFragmentationThreshold[percentage]=");
+			compactionCommand.append(compactions.getFragmentationPercentView());
+		}
+		if(compactions.isFragmentationCheckViewMB()){
+			compactionCommand.append(" -d viewFragmentationThreshold[size]=");
+			int mb = Integer.parseInt(compactions.getFragmentationMBView());
+			compactionCommand.append(mb*1024*1024);
+		}
+		if(compactions.isTimeIntervalCheck()) {
+			compactionCommand.append(" -d allowedTimePeriod[fromHour]=");
+			compactionCommand.append(compactions.getCompactionFromHour());
+			compactionCommand.append(" -d allowedTimePeriod[fromMinute]=");
+			compactionCommand.append(compactions.getCompactionFromMinute());
+			compactionCommand.append(" -d allowedTimePeriod[toHour]=");
+			compactionCommand.append(compactions.getCompactionToHour());
+			compactionCommand.append(" -d allowedTimePeriod[toMinute]=");
+			compactionCommand.append(compactions.getCompactionToMinute());
+		}
+		
+		compactionCommand.append(" -d allowedTimePeriod[abortOutside]=");
+		compactionCommand.append(compactions.isAbortCompaction());
+		compactionCommand.append(" -d parallelDBAndViewCompaction=");
+		compactionCommand.append(compactions.isCompactParallel());
+		compactionCommand.append(" -d purgeInteval=");
+		compactionCommand.append(compactions.getPurgeInterval());
+		System.out.println(compactionCommand);
+		
+		Map<String,Object> resultMap;
+		try {
+			resultMap = serviceUtil.curlExcute(compactionCommand.toString());
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return "오류입니다";
+		}
+		
+		if(resultMap.get("result").toString().contains("HTTP/1.1 200 OK")) {
+			return "설정이 완료되었습니다.";
+		}
+		
+		return resultMap.get("result");
+	}
 	
 	
+	public Object downSampleBucket(String sampleBucketLists[]) {
+		
+		if(dto== null)
+			return "서버 연결을 해주십시오.";
+		
+		List<String> sampleBucketList = new ArrayList<String>();
+		
+		for(int i=0;i<sampleBucketLists.length;i++) {
+			try {
+				cluster.buckets().getBucket(sampleBucketLists[i]);
+			}
+			catch(BucketNotFoundException e) {
+				sampleBucketList.add("\\\""+sampleBucketLists[i]+"\\\"");
+			}
+		}
+		
+		StringBuilder bucketCommand;
+		if(sampleBucketList.size() ==0)
+			return "버킷이 이미 존재합니다.";
+		else {
+			bucketCommand = new StringBuilder();
+			bucketCommand.append("curl -u ");
+			bucketCommand.append(dto.getUsername());
+			bucketCommand.append(":");
+			bucketCommand.append(dto.getPassword());
+			bucketCommand.append(" http://");
+			bucketCommand.append(dto.getHostname());
+			bucketCommand.append(":");
+			bucketCommand.append(dto.getPortNumber());
+			bucketCommand.append("/sampleBuckets/install -d [");
+			bucketCommand.append(sampleBucketList.get(0));
+			if(sampleBucketList.size()>1) {
+				bucketCommand.append(",");
+				bucketCommand.append(sampleBucketList.get(1));
+				if(sampleBucketList.size()>2) {
+					bucketCommand.append(",");
+					bucketCommand.append(sampleBucketList.get(2));
+					bucketCommand.append("]");
+				}else
+					bucketCommand.append("]");
+			}
+			else 
+				bucketCommand.append("]");
+		}
+		System.out.println(bucketCommand);
+		
+		String result = serviceUtil.curlExcute(bucketCommand.toString()).get("result").toString();
+		
+		
+		return result;
+	}
+
 }

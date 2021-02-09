@@ -20,6 +20,10 @@ public class CouchExceptionHandler {
 			
 			return "[ERROR]: RAM의 크기는 최소 100MB이어야 합니다.";
 		}
+		else if( e.toString().contains("Bucket name can only contain")){
+			
+			return "[ERROR]: Bucket의 Name에는 a-z(A-Z), 0-9의 문자만 삽입가능합니다.";
+		}
 		
 		e.printStackTrace();
 		

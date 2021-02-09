@@ -12,7 +12,7 @@
 	<c:import url="/WEB-INF/view/common/header.jsp">
 	</c:import>
 
-		<div class="container">
-		</div>
+	<div class="container">
+	</div>
 </body>
 </html>

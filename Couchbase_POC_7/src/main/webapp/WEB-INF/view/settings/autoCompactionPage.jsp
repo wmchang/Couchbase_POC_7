@@ -13,7 +13,7 @@
 
 	function setCompaction() {
 
-		var check = inputCheck();
+		var check = inputCheck($("#autoCompactionForm"));
 		if (check == false) {
 			alert('모든 항목을 입력해주세요.');
 			return;
@@ -35,21 +35,6 @@
 		});
 	}
 
-	function inputCheck() {
-		let inputText = $("#autoCompactionForm input");
-
-		for (var i = 0; i < inputText.length; i++) {
-
-			if (inputText[i].value == "" || inputText[i].value == null) {
-				if(inputText[i].disabled){
-					continue;
-				}
-				return false;
-			}
-		}
-		return true;
-	}
-	
 	function compactionTimeCheck(){
 		
 		if(document.getElementById("timeIntervalCheck").checked==false)
@@ -106,7 +91,7 @@
 					<div>
 						<input type='hidden' name="fragmentationCheckDatabasePer" value='false'>
 						<input type="checkbox" name="fragmentationCheckDatabasePer" value="true" style=margin-top:10px; checked onchange=compactionChecking(this); />
-						<input type="text" name="fragmentationPercentDatabase" id=fragmentationPercentDatabase class=doc style=width:100px; />%
+						<input type="text" name="fragmentationPercentDatabase" id=fragmentationPercentDatabase class=doc style=width:100px; value=30 />%
 					</div><br>
 					<div>
 						<input type='hidden' name="fragmentationCheckDatabaseMB" value='false'>
@@ -118,7 +103,7 @@
 					<div>
 						<input type='hidden' name="fragmentationCheckViewPer" value='false'>
 						<input type="checkbox" name="fragmentationCheckViewPer" value="true" style=margin-top:10px; checked  onchange=compactionChecking(this); />
-						<input type="text" name="fragmentationPercentView" id=fragmentationPercentView class=doc style=width:100px; />%
+						<input type="text" name="fragmentationPercentView" id=fragmentationPercentView class=doc style=width:100px; value=30 />%
 					</div><br>
 					<div>
 						<input type='hidden' name="fragmentationCheckViewMB" value='false'>
@@ -154,7 +139,7 @@
 					</div><br>
 					
 					<h5>- 메타데이터의 삭제 빈도  [0.04(1시간)~60(60일)]</h5>
-					<input type="text" name="purgeInterval" class=doc style=width:100px; placeholder=3 />days
+					<input type="text" name="purgeInterval" class=doc style=width:100px; value=3 />days
 					
 					<br>
 					<button type="button" class="btn btn-primary float-right" onclick="setCompaction();">실행</button>

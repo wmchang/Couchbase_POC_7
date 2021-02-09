@@ -52,17 +52,16 @@
 					<c:if test="${not empty FTIList}">
 						<table class="table table-striped table-hover">
 							<tr>
-								<th style="text-align: center;">index name</th>
 								<th style="text-align: center;">bucket name</th>
+								<th style="text-align: center;">index name</th>
 								<th style="text-align: center;">Search</th>
 							</tr>
 							<c:forEach items="${FTIList }" var="list">
 								<tr>
-									<td style=width:33%;>${list.name }</td>
 									<td style=width:33%;>${list.bucket }</td>
+									<td style=width:33%;>${list.name }</td>
 									<td style=width:33%;><input type=text class=doc style=width:150px; id=bucketName name="bucketName" onkeyup="getFTS('${list.name}','${list.bucket }',this)"></td>
 								</tr>
-	
 							</c:forEach>
 						</table>
 					</c:if>

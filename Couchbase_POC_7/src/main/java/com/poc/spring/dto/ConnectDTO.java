@@ -9,6 +9,9 @@ public class ConnectDTO{
 	private String password;
 	private String bucketName;
 	
+//	private String scopeName;
+//	private String collectionName;
+	
 	// Timeout
 	private long kvTimeout;
 	private long viewTimeout;
@@ -40,7 +43,6 @@ public class ConnectDTO{
 	private boolean enableCompression;
 	private int compressionMinSize;
 	private double compressionMinDouble;
-	
 	
 	public boolean isEnableCompression() {
 		return enableCompression;

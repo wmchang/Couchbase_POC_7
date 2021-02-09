@@ -60,7 +60,7 @@ textarea {
 				alert('오류가 발생했습니다.');
 			},
 			success : function(data) {
-				alert('해당 Document가 삭제되었습니다.');
+				alert(data);
 				window.close();
 				opener.document.location.reload();
 			}

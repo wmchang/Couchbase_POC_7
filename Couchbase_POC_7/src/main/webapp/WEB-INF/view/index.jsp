@@ -71,13 +71,23 @@
 			</div>
 
 			<div>
-				# 버킷 이름<br> <input type="text" name="bucketName" id ="bucketName" />
+				# Bucket 이름<br> <input type="text" name="bucketName" id ="bucketName" />
 			</div>
-			<button style=margin-top:5px; class="btn btn-primary float-right" type=button onclick="testButton();">테스트</button>
+<!-- 
+			<div>
+				# Scope 이름<br> <input type="text" name="scopeName" id ="scopeName" />
+			</div>
+			<div>
+				# Collection 이름<br> <input type="text" name="collectionName" id ="collectionName" />
+			</div>
+
+ -->
+ 			<button style=margin-top:5px; class="btn btn-primary float-right" type=button onclick="testButton();">테스트</button>
         </div>
         
         <div class="col-lg-2 borderDiv mx-auto"><br>
-        	<h4> &nbsp; Timeout 설정 </h4><br>
+        	<h4> &nbsp; Timeout 설정<span style=font-size:15px;>(ms)</span> </h4>
+        	
 			<div>
 				# Key-Value TimeOut <br>
 				<input type="text" name="kvTimeout" size="10" value=2500
@@ -146,7 +156,7 @@
 				<label for=true>False</label>
 			</div>
 			<div>
-				# TCP 유지 시간<br>
+				# TCP 유지 시간<span style=font-size:12px;>(ms)</span><br>
 				<input type="text" name="tcpKeepAliveTime"  id=tcpGroup 
 					value=60000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
@@ -161,12 +171,12 @@
 					value=12 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# HTTP Connection 유지 시간<br>
+				# HTTP Connection 유지 시간<span style=font-size:12px;>(ms)</span><br>
 				<input type="text" name="idleHttpConnectionTimeout" 
 					value=30000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# Config 조사 시간 간격<br>
+				# Config 조사 시간 간격<span style=font-size:12px;>(ms)</span><br>
 				<input type="text" name="configPollInterval" 
 					value=2500 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
@@ -223,13 +233,13 @@
 			</div>
 			
 			<div>
-				# 압축시킬 문서 최소 사이즈(byte)<br>
+				# 압축시킬 문서 최소 사이즈<span style=font-size:12px;>(byte)</span><br>
 				<input type="text" name="compressionMinSize"   id=compressionGroup
 					value=32 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			
 			<div>
-				# 압축 비율<br>
+				# 압축 비율<span style=font-size:12px;>(%)</span><br>
 				<input type="text" name="compressionMinDouble"  id=compressionGroup
 					value=0.83 />
 			</div>

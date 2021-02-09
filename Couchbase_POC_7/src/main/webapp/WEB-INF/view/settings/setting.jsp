@@ -13,7 +13,7 @@
 
 	function setSetting() {
 
-		var check = inputCheck();
+		var check = inputCheck($("#clusterSettings"));
 		if (check == false) {
 			alert('모든 항목을 입력해주세요.');
 			return;
@@ -30,55 +30,21 @@
 				alert(data);
 			},
 			success : function(data) {
-				if(data==null || data==''){
-					alert('먼저 서버를 연결해주십시오.');
-				}
 				alert(data);
 			}
 		});
 	}
-
-	function inputCheck() {
-		let inputText = $("#clusterSettings input");
-
-		for (var i = 0; i < inputText.length; i++) {
-
-			if (inputText[i].value == "" || inputText[i].value == null) {
-				if(inputText[i].disabled){
-					continue;
-				}
-				return false;
-			}
-		}
-		return true;
-	}
 	
-	function autoFailoverChecking(){
-		if(document.getElementById("autoFailoverCheck").checked==false)
-			$("input.failoverGroup").attr("disabled", true);
-		else
-			$("input.failoverGroup").removeAttr("disabled");
-	}
-	
-	function threadCheck(check){
-		if(check.value=='fixedValue'){
-			if(check.name=='readThread'){
-				$("input#readThreadNumber").removeAttr("disabled");
-			}
-			else{
-				$("input#writeThreadNumber").removeAttr("disabled");
-			}
+	function failoverDisabled(chk){
+		
+		if(!chk.checked){
+			$('.autoFailoverDataErrorSecondTime').attr("disabled", true);
 		}else{
-			
-			if(check.name=='readThread'){
-				$("input#readThreadNumber").attr("disabled", true);
-			}
-			else{
-				$("input#writeThreadNumber").attr("disabled", true);
-			}
+			$('.autoFailoverDataErrorSecondTime').removeAttr("disabled");
 		}
-	}
-
+		
+		
+	};
 
 </script>
 <body>
@@ -98,20 +64,20 @@
 				</div>
 				<h5>&nbsp;# 메모리 할당량 (단위: MB)</h5>
 				<div>
-					# Data Service <input type="text" name="dataServiceQuota" />
+					# Data Service <input type="text" name="dataServiceQuota" onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" value=256 />
 				</div>
 
 				<div>
-					# Index Service <input type="text" name="indexServiceQuota" />
+					# Index Service <input type="text" name="indexServiceQuota" onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" value=256 />
 				</div>
 				<div>
-					# Search Service <input type="text" name="searchServiceQuota" />
+					# Search Service <input type="text" name="searchServiceQuota" onKeyup="this.value=this.value.replace(/[^0-9]/g,'');"  value=256 />
 				</div>
 				<div>
-					# Analytics Service <input type="text" name="analyticsServiceQuota" />
+					# Analytics Service <input type="text" name="analyticsServiceQuota" onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" value=1024  />
 				</div>
 				<div>
-					# Eventing Service <input type="text" name="eventingServiceQuota" />
+					# Eventing Service <input type="text" name="eventingServiceQuota" onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" value=256  />
 				</div>
 
 				<div style=display:block;>
@@ -125,34 +91,42 @@
 				<h4>&nbsp; 노드 가용성</h4><br>
 
 				<div>
-					<input type="checkbox" name="autoFailoverCheck" id="autoFailoverCheck" value="true" checked	onchange="autoFailoverChecking()">
+					<input type="checkbox" name="autoFailoverCheck" id="failoverGroup" value="true" checked	onchange="checkboxDisableChecking(this)">
 					<input type='hidden' name='autoFailoverCheck' value='false'>
-					# <input type="text" name=failoverSecondTime style="width: 50px; height:25px;" class=doc />초 동안
-					<input type="text" name="failoverEvent" style="width: 50px; height:25px;" class=doc /> 개의 이벤트가 실행되지 못하면 오토 페일오버
+					# <input type="text" name=failoverSecondTime id="failoverGroup" style="width: 50px; height:25px;" class=doc value=120 />초 동안
+					<input type="text" name="failoverEvent" id="failoverGroup" style="width: 50px; height:25px;" class=doc value=1  /> 개의 이벤트가 실행되지 못하면 오토 페일오버
 				</div><br>
 				<div>
-					<input type="checkbox" name="autoFailoverDataError" value="true" class=failoverGroup>
+					<input type="checkbox" name="autoFailoverDataError" value="true" id="failoverGroup" onchange="failoverDisabled(this)">
 					<input type='hidden' name='autoFailoverDataError' value='false'>
-					# 지속적으로 <input type="text" name="autoFailoverDataErrorSecondTime" style="width: 50px; height:25px;" class=doc />
+					# 지속적으로 <input type="text" name="autoFailoverDataErrorSecondTime" id="failoverGroup" class=autoFailoverDataErrorSecondTime style="width: 50px; height:25px;" class=doc value=120 disabled />
 					초 동안 디스크에 데이터 읽고/쓰기 오류가 발생하면 오토 페일 오버
 				</div><br>
 				<div>
-					<input type="checkbox" name="autoFailoverServerGroup" value="true" class=failoverGroup>
+					<input type="checkbox" name="autoFailoverServerGroup" value="true" id="failoverGroup">
 					<input type='hidden' name="autoFailoverServerGroup" value='false'>
 					 # 서버 그룹의 오토 페일오버 가능 여부
 				</div><br>
 				<div>
-					<input type="checkbox" name="autoFailoverStopRebalance" value="true" checked class=failoverGroup>
+					<input type="checkbox" name="autoFailoverStopRebalance" value="true" checked id="failoverGroup">
 					<input type='hidden' name="autoFailoverStopRebalance" value='false'>
 					# 오토 페일오버 수행 시 리밸런싱 중단 가능 여부
 				</div><br>
 				<div>
 					<input type='hidden' name="autoReprovisioning" value="false">
-					<input type="checkbox" name="autoReprovisioning" value="true" >
+					<input type="checkbox" name="autoReprovisioning" value="true" checked onchange=checkboxDisableChecking(this) id=reprovisioningGroup>
 					# Ephemeral 버킷을 포함하는 노드를 사용할 수 없게 되면
-					<input type="text" name="autoReprovisioningNode" style="width: 50px; height:25px;" class=doc />
+					<input type="text" name="autoReprovisioningNode" style="width: 50px; height:25px;" id=reprovisioningGroup class=doc value=1 />
 					노드의 복제본을 활성화 상태로 변경
 				</div>
+				
+				<div>
+					<input type="checkbox" name="retryRebalance_Enable" value="true" id="rebalanceGroup" onchange="checkboxDisableChecking(this)">
+					<input type='hidden' name='retryRebalance_Enable' value='false'>
+					# Rebalance 실패 시 <input type="text" name="retryRebalance_afterTimePeriod" id="rebalanceGroup" style="width: 50px; height:25px;" disabled value=300 />
+					초 뒤에 최대 <input type="text" name="retryRebalance_maxAttempts" id="rebalanceGroup" class=autoFailoverDataErrorSecondTime style="width: 50px; height:25px;" disabled value=1 />번 재시도
+				</div><br>
+				
 			</div>
 			<div class="mx-auto col-lg-3 borderDiv"><br>
 				<h4> &nbsp; Setting etc</h4><br>
@@ -199,7 +173,7 @@
 						<label>Standard Global Secondary</label>
 				</div>
 				<div>
-					# 인덱서 쓰레드 개수 <input type="text"name="IndexerThreadNumber" style="width: 50px; float:right;" class=doc />
+					# 인덱서 쓰레드 개수 <input type="text"name="IndexerThreadNumber" style="width: 50px; float:right;" class=doc value=0 />
 				</div><br>
 				<div>
 					# 인덱서 로그 레벨 <select name="logLevel" class=docSelect style=float:right;>
@@ -216,7 +190,7 @@
 				</div><br>
 				<div>
 					# XDCR 최대 프로세스 수
-					<input type="text"name="XDCRMaximumProcesses" style="float:right;" class=doc />
+					<input type="text"name="XDCRMaximumProcesses" style="float:right;" class=doc value=4 />
 				</div><br>
 				<button type="button" class="btn btn-primary float-right" onclick="setSetting();">실행</button>
 			</div>

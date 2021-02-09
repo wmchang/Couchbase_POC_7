@@ -67,6 +67,21 @@
 		if(document.getElementById("bucketName").value=='-Select Bucket-')
 			return;
 		
+		$('#scopeName').val('');
+		$('#collectionName').val('');
+		
+		document.getElementById("documentPageForm").submit();
+	}
+	
+	function scopeChange(){
+
+		$('#collectionName').val('');
+
+		document.getElementById("documentPageForm").submit();
+	}
+	
+	function collectionChange(){
+
 		document.getElementById("documentPageForm").submit();
 	}
 	
@@ -101,6 +116,7 @@
 			}
 		}); 
 	}
+	
 </script>
 <body>
 	
@@ -122,20 +138,36 @@
 						<button type="button" class="btn btn-primary" onclick="createPrimaryIndex();">Primary Index 생성</button>
 					</c:if>
 	
-	
 					<c:if test="${not empty documentList}">
 					<div style="float:right;">
 						<form id=documentPageForm action=documentPage style=display:inline-block;>
-							<label>limit: </label>
-							<input type=text name=limit value=<%=limit %>>
 						
 							<label >Bucket:</label>
 							<select name=bucketName onchange=bucketChange() id=bucketName>
 									<option value='-Select Bucket-'>-Select Bucket-</option>
 								<c:forEach items="${bucketList }" var="list">
-									<option value=${list.name } <c:if test="${list.name eq bucketName}">selected</c:if>>${list.name }</option>
+									<option value=${list } <c:if test="${list eq bucketName}">selected</c:if>>${list }</option>
 								</c:forEach>
 							</select>
+						
+							<label >Scope:</label>
+							<select name=scopeName onchange=scopeChange() id=scopeName>
+								<c:forEach items="${scopeList }" var="list">
+									<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
+								</c:forEach>
+							</select>
+							
+							<label >Collection:</label>
+							<select name=collectionName onchange=collectionChange id=collectionName>
+								<c:forEach items="${collectionList }" var="list">
+									<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
+								</c:forEach>
+							</select>
+						
+							<label>limit: </label>
+							<input type=text name=limit value=<%=limit %>>
+							
+							
 						</form>
 					
 						<button class="btn btn-primary" onclick="newDocument();">Document 추가</button>
@@ -153,10 +185,10 @@
 								<th style="text-align: center;">문서 ID</th>
 								<th style="text-align: center;">문서 내용</th>
 							</tr>
+
 							<c:forEach items="${documentList }" var="list">
 								<tr>
-									<td><a href="#" onclick="openDocument('${list.id}')" class=overText>${list.id }</a>
-									</td>
+									<td><a href="#" onclick="openDocument('${list.id}')" class=overText>${list.id }</a></td>
 	
 									<td class=overText>${list.content }</td>
 								</tr>

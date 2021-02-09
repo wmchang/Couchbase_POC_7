@@ -13,7 +13,7 @@
 
 	function downloadSampleBucket() {
 
-		var check = inputCheck();
+		var check = boxCheck();
 		if (check == false) {
 			alert('원하는 버킷을 체크해주십시오.');
 			return;
@@ -35,7 +35,7 @@
 		});
 	}
 
-	function inputCheck() {
+	function boxCheck() {
 		if($('input:checkbox[name=sampleBucket]:checked').length==0)
 			return false;
 		return true;

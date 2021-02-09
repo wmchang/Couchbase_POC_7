@@ -1,5 +1,10 @@
 package com.poc.spring.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,13 +12,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.couchbase.client.core.error.IndexFailureException;
 import com.poc.spring.service.CouchbaseService;
+import com.poc.spring.util.ServiceUtils;
 
 @Controller
 public class PageController {
 	
 	@Autowired
 	CouchbaseService couchbaseService;
+	
+	@Autowired
+	ServiceUtils serviceUtil;
 	
 	@RequestMapping("/")
 	public String index() { 
@@ -33,36 +43,44 @@ public class PageController {
 	
 	@RequestMapping("/bucketManagePage")
 	public String bucketManagePage(Model model) {
-		model.addAttribute("bucketList", couchbaseService.getBucketList());
+		model.addAttribute("bucketList", couchbaseService.getBucketListDetail());
 		return "/bucketManagePage";
 	}
 	
 	@RequestMapping(value="/documents/documentPage") 
 	public String documentPage(Model model,HttpServletRequest request) { 
 		
+		String bucketName = request.getParameter("bucketName");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
+
+		try {
+			if(bucketName == null)
+				bucketName = couchbaseService.bucket.name();
+			if(scopeName == null)
+				scopeName = "_default";
+			if(collectionName == null)
+				collectionName = "_default";
+		}catch(NullPointerException e) {
+			return "/documents/documentPage";
+		}
+		model.addAttribute("bucketName",bucketName);
+		model.addAttribute("scopeName",scopeName);
+		model.addAttribute("collectionName",collectionName);
 		Object list = couchbaseService.getDocumentList(request);
-		
 		
 		if(list == null) {
 			return "/documents/documentPage";
-		}
-		else if(!list.toString().equals("NotExistsIndex") && !list.toString().equals("MemcachedBucketNotSupported")) {
-			model.addAttribute("documentList", couchbaseService.getDocumentList(request));
-		}
+		}else
+			model.addAttribute("documentList",list);
+
 		
 		model.addAttribute("bucketList", couchbaseService.getBucketList());
 		
-		String bucketName;
-		if(request.getParameter("bucketName")==null || request.getParameter("bucketName") =="") {
-			
-			if(couchbaseService.bucket==null)
-				return "/documents/documentPage";
-			bucketName = couchbaseService.bucket.name();
-		}
-		else
-			bucketName = request.getParameter("bucketName");
+		Map<String, Object> resultMap = couchbaseService.getScopeCollection(request);
 		
-		model.addAttribute("bucketName",bucketName);
+		model.addAttribute("scopeList", resultMap.get("scopeList"));
+		model.addAttribute("collectionList", resultMap.get("collectionList"));
 		
 		return "/documents/documentPage"; 
 	}
@@ -129,7 +147,12 @@ public class PageController {
 		return "CsvOrFileUpsertPage";
 	}
 	
-	
+	@RequestMapping(value="/logPage") 
+	public String logPage(Model model) { 
+		
+		model.addAttribute("logList", couchbaseService.getLogs());
+		return "logPage"; 
+	}
 	@RequestMapping("/settings/setting")
 	public String setting() {
 		return "/settings/setting";
