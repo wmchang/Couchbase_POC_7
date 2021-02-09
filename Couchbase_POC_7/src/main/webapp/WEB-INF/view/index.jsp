@@ -10,7 +10,7 @@
 <script>
 	function connectionData() {
 		
-		var check = inputCheck();
+		var check = inputCheck($("#conDataForm"));
 		if(check == false){
 			alert('모든 항목을 입력해주세요.');
 			return;
@@ -22,42 +22,23 @@
 			url : "<%= request.getContextPath()%>/conData",
 			data : data,
 			error : function(xhr, status, error) {
+				console.log(error);
 				alert('입력이 잘못되었습니다.');
 			},
 			success : function(data) {
-				alert('설정이 완료되었습니다.');
+				alert(data);
 			}
 		});
 	
 	}
 	
-	function inputCheck(){
-		let inputText = $("#conDataForm input[type=text]");
-		
-		for(var i=0;i<inputText.length; i++){
-			
-			if(inputText[i].value == "" || inputText[i].value == null){
-				
-				
-				if( inputText[i].name =="txtSslKeyLoc" ||
-					inputText[i].name =="pwdSslKeyPwd"){
-					continue;
-					
-				}
-				
-				return false;
-			}
-		}		
-		return true;
-	}
-	
 	function testButton(){
 		
-		document.querySelector('#txtHostName').value='localhost';
+		document.querySelector('#hostname').value='localhost';
 		document.querySelector('#portNumber').value='8091';
-		document.querySelector('#txtUserName').value='Administrator';
-		document.getElementById("pwdPassword").value='admin123';
-		document.querySelector('#txtBucketName').value='test';
+		document.querySelector('#username').value='Administrator';
+		document.querySelector("#password").value='admin123';
+		document.querySelector('#bucketName').value='test';
 		connectionData();
 	}
 </script>
@@ -71,204 +52,193 @@
 <div class="container-fluid">
 	<form id="conDataForm" name="conDataForm" >
     <div class="row">
-        <div class="col-lg-2 borderDiv"><br>
+        <div class="col-lg-2 borderDiv mx-auto"><br>
         	<h4> &nbsp; 연결 </h4><br>
 			<div>
-				# 호스트 이름 <input type="text" name="txtHostName" id="txtHostName" />
+				# 호스트 이름<br> <input type="text" name="hostname" id="hostname" />
 			</div>
 			
 			<div>
-				# 포트번호 <input type="text" name="portNumber" id="portNumber" />
+				# 포트번호<br> <input type="text" name="portNumber" id="portNumber" />
 			</div>
 
 			<div>
-				# 유저 이름 <input type="text" name="txtUserName" id ="txtUserName" />
+				# 유저 이름<br> <input type="text" name="username" id ="username" />
 			</div>
 
 			<div>
-				# 패스워드 <input type="password" name="pwdPassword" id ="pwdPassword" />
+				# 패스워드<br> <input type="password" name="password" id ="password" />
 			</div>
 
 			<div>
-				# 버킷 이름 <input type="text" name="txtBucketName" id ="txtBucketName" />
+				# 버킷 이름<br> <input type="text" name="bucketName" id ="bucketName" />
 			</div>
 			<button style=margin-top:5px; class="btn btn-primary float-right" type=button onclick="testButton();">테스트</button>
         </div>
-        <div class="col-lg-2 borderDiv"><br>
-        	<h4> &nbsp; Timeout 옵션 </h4><br>
+        
+        <div class="col-lg-2 borderDiv mx-auto"><br>
+        	<h4> &nbsp; Timeout 설정 </h4><br>
 			<div>
-				# Key-Value TimeOut 
-				<input type="text" name="txtKeyValueTO" size="10" value=2500
+				# Key-Value TimeOut <br>
+				<input type="text" name="kvTimeout" size="10" value=2500
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# View TimeOut 
-				<input type="text" name="txtViewTO" size="10" value=75000
+				# View TimeOut <br>
+				<input type="text" name="viewTimeout" size="10" value=75000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# Query TimeOut 
-				<input type="text" name="txtQueryTO" size="10" value=75000
+				# Query TimeOut <br>
+				<input type="text" name="queryTimeout" size="10" value=75000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# Connect TimeOut 
-				<input type="text" name="txtConnectTO" size="10" value=5000
+				# Search TimeOut <br>
+				<input type="text" name="searchTimeout" size="10" value=75000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# Disconnect TimeOut 
-				<input type="text" name="txtDisConnectTO" size="10" value=25000
+				# Analytics TimeOut <br>
+				<input type="text" name="analyticsTimeout" size="10" value=75000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# Connect TimeOut 
-				<input type="text" name="txtManagementTO" size="10" value=75000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-        </div>
-        <div class="col-lg-2 borderDiv"><br>
-        	<h4> &nbsp; 고급 옵션 </h4><br>
-			<div>
-				# Ring 버퍼 사이즈 요청
-				<input type="text" name="txtRequestBufferSize" value=16384
+				# Connect TimeOut <br>
+				<input type="text" name="connectTimeout" size="10" value=5000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# Ring 버퍼 사이즈 응답
-				<input type="text" name="txtResponseBufferSize"	value=16384
+				# Disconnect TimeOut <br>
+				<input type="text" name="disconnectTimeout" size="10" value=25000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
 			<div>
-				# 버퍼 풀 활성화 <br>
-				<input type="radio" name="rdoBufferPoolEnab" value="true" />
-				<label>True</label>
-				<input type="radio" name="rdoBufferPoolEnab" value="false" checked />
-				<label>False</label>
-			</div><br>
-			
-			<h4> &nbsp; 신뢰도 옵션 </h4><br>
-			<div>
-				# 최대 요청 Lifetime
-				<input type="text" name="txtMaxReqLifeTime" 
-					value=75000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
-				# 소켓 유지 시간
-				<input type="text" name="txtKeepAliveInterval" 
-					value=30000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-        </div>
-        <div class="col-lg-2 borderDiv"><br>
-			<h4> &nbsp; 성능 옵션 </h4><br>
-			<div>
-				# 노드당 Key:Value EndPoint
-				<input type="text" name="txtKvEndpoints" value=1
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
-				# 노드당 View EndPoint
-				<input type="text" name="txtViewEndpoint" value=1
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
-				# 노드당 Query EndPoint 
-				<input type="text" name="txtQueryEndpoint" value=1
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
-				# TCP Nodelay<br>
-				<input type="radio" name="rdoTcpNodelayEnable" value="true" />
-				<label>True</label>
-				
-				<input type="radio" name="rdoTcpNodelayEnable" value="false" checked />
-				<label>False</label>
-			</div>
-        </div>
-        <div class="col-lg-2 borderDiv" ><br>
-        	<h4> &nbsp; 부트스트랩 옵션 </h4><br>
-				
-			<div>
-				# 암호화 사용<br>
-				
-				<input type="radio" name="rdoSslEnable" value="true" />
-				<label>True</label>
-				
-				<input type="radio" name="rdoSslEnable" value="false" checked /> 
-				<label>False</label>
-			</div>
-			
-			<div>
-				# SSL 키 저장소 위치
-				<input type="text" name="txtSslKeyLoc" value="" />
-			</div>
-			
-			<div>
-				# SSL 키 저장소 비밀번호
-				<input type="password" name="pwdSslKeyPwd" value="" />
-			</div>
-			<div>
-				# HTTP를 통한 Config 로드<br>
-				<input type="radio" name="rdoHttpEnabled" value="true" checked />
-				<label>True</label>
-				
-				<input type="radio" name="rdoHttpEnabled" value="false" /> 
-				<label>False</label>
-			</div>
-			<div>
-				# HTTP 비 암호화 포트 설정
-				<input type="text" name="txtHttpDirectPort" value=8891
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
-				# HTTP 암호화 포트 설정
-				<input type="text" name="txtHttpSslPort" value=18091
+				# Connect TimeOut <br>
+				<input type="text" name="managementTimeout" size="10" value=75000
 					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
 			</div>
         </div>
-        <div class="col-lg-2 borderDiv"  ><br>
-        	<h4> &nbsp; 부트스트랩 옵션2 </h4><br>
+        <div class="col-lg-3 borderDiv mx-auto"><br>
+        	<h4> &nbsp; I/O 설정 </h4><br>
         	<div>
-				# Carrier Publication을 통해 config 로드<br>
-				
-				<input type="radio" name="rdoCarrierEnable" value="true"  checked /> 
-				<label for="True">True</label>
-				
-				<input type="radio" name="rdoCarrierEnable" value="false" /> 
-				<label for="False">False</label>
-			</div>
-			<div>
-				# Carrier 비암호화 포트 설정
-				<input type="text" name="txtCarrierDirectPort"
-					value=11210 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
-				# Carrier 암호화 포트 설정
-				<input type="text" name="txtCarrierSslPort" value=11207
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
-			</div>
-			<div>
 				# DNS SRV 사용<br>
-				<input type="radio" name="rdoDnsSrvEnable" value="true" />
+				<input type="radio" name="enableDnsSrv" value="true" checked />
 				<label for=true>True</label>
 				
-				<input type="radio" name="rdoDnsSrvEnable" value="false" checked /> False
+				<input type="radio" name="enableDnsSrv" value="false"  /> 
+				<label for=true>False</label>
+			</div>
+        	<div>
+				# Mutation Tokens 사용<br> <!-- 사용 시 내구성 요구사항과 고급 N1QL 쿼리기능 허용>> 오버헤드 상승. -->
+				<input type="radio" name="mutationTokensEnabled" value="true" checked />
+				<label for=true>True</label>
+				
+				<input type="radio" name="mutationTokensEnabled" value="false"  />
+				<label for=true>False</label>
+			</div>
+        	<div>
+				# TCP 연결 유지<br> <!-- 사용 시 내구성 요구사항과 고급 N1QL 쿼리기능 허용>> 오버헤드 상승. -->
+				<input type="radio" name="enableTcpKeepAlives" id=tcpGroup value="true" checked onclick="radioDisableChecking(this)" />
+				<label for=true>True</label>
+				
+				<input type="radio" name="enableTcpKeepAlives" id=tcpGroup value="false"  onclick="radioDisableChecking(this)" />
 				<label for=true>False</label>
 			</div>
 			<div>
-				# 사용 가능한 변조 토큰<br>
-				<input type="radio" name="rdoMutationTknEnable" value="true" />
-				<label for="True">True</label>
+				# TCP 유지 시간<br>
+				<input type="text" name="tcpKeepAliveTime"  id=tcpGroup 
+					value=60000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+			</div>
+			<div>
+				# KV Connection 수<br>
+				<input type="text" name="numKvConnections" 
+					value=1 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+			</div>
+			<div>
+				# HTTP Connection 수<br>
+				<input type="text" name="maxHttpConnections" 
+					value=12 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+			</div>
+			<div>
+				# HTTP Connection 유지 시간<br>
+				<input type="text" name="idleHttpConnectionTimeout" 
+					value=30000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+			</div>
+			<div>
+				# Config 조사 시간 간격<br>
+				<input type="text" name="configPollInterval" 
+					value=2500 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+			</div>
+			<div>
+				# 해당 서비스 트래픽 캡처 <br>
+				<input type="checkbox" name="captureTraffic" value="kv"> Data
+				<input type="checkbox" name="captureTraffic" value="query"> Query
+				<input type="checkbox" name="captureTraffic" value="search"> Search<br>
+				<input type="checkbox" name="captureTraffic" value="view"> View
+				<input type="checkbox" name="captureTraffic" value="analytics"> Analytics
+				<input type="checkbox" name="captureTraffic" value="manager"> Server
+			</div>
+        </div>
+        
+        <div class="col-lg-3 borderDiv mx-auto"><br>
+			<h4> &nbsp; Security 설정 </h4><br>
+			<div>
+				# TLS 암호화 <br> <!-- 사용 시 내구성 요구사항과 고급 N1QL 쿼리기능 허용>> 오버헤드 상승. -->
+				<input type="radio" name="enableTls" value="true" id=tlsGroup onclick="radioDisableChecking(this)" />
+				<label for=true>True</label>
 				
-				<input type="radio" name="rdoMutationTknEnable" value="false" checked /> 
-				<label for="False">False</label>
+				<input type="radio" name="enableTls" value="false" id=tlsGroup onclick="radioDisableChecking(this)" checked />
+				<label for=true>False</label>
+			</div>
+			<div>
+				# TLS 인증서 경로 <br>
+				<input type="text" name="keyStorePath" disabled id=tlsGroup>
+			</div>
+			<div>
+				# TLS 인증서 비밀번호 <Br>
+				<input type="text" name="keyStorePwd" disabled id=tlsGroup>
+			</div>
+			<div>
+				# TLS Provider 설정 <br> <!-- 사용 시 내구성 요구사항과 고급 N1QL 쿼리기능 허용>> 오버헤드 상승. -->
+				<input type="radio" name="enableNativeTls" value="true" checked />
+				<label for=true>True</label>
+				
+				<input type="radio" name="enableNativeTls" value="false"  />
+				<label for=true>False</label>
 			</div>
 			
-				<div style="align-items:bottom; text-align:right;">
+			<br><br>
+			
+			<h4> &nbsp; 압축 설정 </h4><br>
+				
+			<div>
+				# 문서 삽입 시 자동압축 <br>
+				
+				<input type="radio" name="enableCompression" value="true" checked  id=compressionGroup onclick="radioDisableChecking(this)"/>
+				<label>True</label>
+				
+				<input type="radio" name="enableCompression" value="false" id=compressionGroup onclick="radioDisableChecking(this)"/> 
+				<label>False</label>
+			</div>
+			
+			<div>
+				# 압축시킬 문서 최소 사이즈(byte)<br>
+				<input type="text" name="compressionMinSize"   id=compressionGroup
+					value=32 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+			</div>
+			
+			<div>
+				# 압축 비율<br>
+				<input type="text" name="compressionMinDouble"  id=compressionGroup
+					value=0.83 />
+			</div>
+			
+			<div style="align-items:bottom; text-align:right;">
 				<button type="button" class="btn btn-primary" onclick="connectionData();">저장</button>
 			</div>
         </div>
-    </div>
+        </div>
     </form>
 </div>
 

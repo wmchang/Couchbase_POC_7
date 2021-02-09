@@ -16,13 +16,13 @@
 <script>
 	function queryExcute() {
 		
-		var check = inputCheck();
+		var check = inputCheck($("#queryForm"));
 		if(check == false){
 			alert('모든 항목을 입력해주세요.');
 			return;
 		}
 		
-		var data = jQuery("#queryForm").serializeArray();
+		var data = $("#queryForm").serializeArray();
 	
 		$.ajax({
 				type : "post",
@@ -32,35 +32,19 @@
 					$('#queryResult').val("에러가 발생하였습니다. 문서의 ID가 중복 혹은 존재하지 않습니다.");
 				},
 				success : function(data) {
-
-					var obj = eval(data);
-					if (obj.status == "success") {
+					
+					if(typeof(data) == 'string'){
+						$('#queryResult').val(data);
+					}else{
+						let obj = eval(data);
 						$('#queryResult').val(obj.allRows);
-						var ugly = document.getElementById('queryResult').value;
-						var obj = JSON.parse(ugly);
-						var pretty = JSON.stringify(obj, undefined, 4);
-						document.getElementById('queryResult').value = pretty;
-					} else if (obj.status != null) {
-						$('#queryResult').val(obj.error);
-					} else {
-						$('#queryResult').val(obj.result);
-						var ugly = document.getElementById('queryResult').value;
-						var obj = JSON.parse(ugly);
-						var pretty = JSON.stringify(obj, undefined, 4);
+						let ugly = document.getElementById('queryResult').value;
+						obj = JSON.parse(ugly);
+						let pretty = JSON.stringify(obj, null, 4);
 						document.getElementById('queryResult').value = pretty;
 					}
 				}
 			});
-	}
-	
-	function inputCheck(){
-		let inputTextArea = $("#queryForm textarea");
-		
-		if(inputTextArea[0].value == "" || inputTextArea[0].value == null){
-			
-			return false;
-		}
-		return true;
 	}
 	
 	function reset(){

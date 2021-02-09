@@ -9,7 +9,7 @@
 <script>
 function uploadFile() {
 	
-	var check = inputCheck();
+	var check = inputCheck($('#fileUpload'));
 	if(check == false){
 		alert('모든 항목을 입력해주세요.');
 		return;
@@ -48,18 +48,6 @@ function uploadFile() {
 	});
 }
 
-function inputCheck(){
-	let inputText = $("#fileUpload input[type=text]");
-	
-	for(var i=0;i<inputText.length; i++){
-		
-		if(inputText[i].value == "" || inputText[i].value == null){
-			
-			return false;
-		}
-	}		
-	return true;
-}
 </script>
 <body>
 	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>

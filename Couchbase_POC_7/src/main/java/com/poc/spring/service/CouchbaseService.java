@@ -747,6 +747,10 @@ public class CouchbaseService {
 			 
 			 return "IndexExistsException";
 		 }
+		 catch(IndexFailureException e) {
+			 
+			 return "IndexFailureException";
+		 }
 	}
 	
 	public Map<String, Object> uploadFile(MultipartHttpServletRequest mRequest) throws Exception {

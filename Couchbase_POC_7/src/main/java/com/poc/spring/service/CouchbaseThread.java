@@ -3,6 +3,7 @@ package com.poc.spring.service;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.json.JsonObject;
 
 public class CouchbaseThread implements Runnable{
 	  int docSize;
@@ -26,7 +27,7 @@ public class CouchbaseThread implements Runnable{
       			System.out.println("완료");
       		}
       		--docCount;
-  			bucket.defaultCollection().upsert(RandomStringUtils.randomAlphanumeric(docIdSize), "{\"a\":\"" + RandomStringUtils.randomAlphanumeric(docSize) + "\"}");
+  			bucket.defaultCollection().upsert(RandomStringUtils.randomAlphanumeric(docIdSize), JsonObject.create().put("a", RandomStringUtils.randomAlphanumeric(docSize)));
   			
       	}
       }catch(Exception e) {

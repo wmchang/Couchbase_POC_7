@@ -14,7 +14,6 @@
 		}
 	}
 	
-	
 	// 넣어야하는 input text 항목들 빈 값 없나 체크해주는 메소드.
 	function inputCheck(forms){
 	
@@ -43,4 +42,11 @@
 		}
 		
 		return true;
+	}
+	
+	
+	// 파라미터 값이 들어있으면 window.close()로 창 닫아주는 메소드
+	function _checkClose(chk,val){
+		if(chk.includes(val))
+			window.close();
 	}

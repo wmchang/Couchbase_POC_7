@@ -11,78 +11,46 @@
 
 	function createNewBucket() {
 		
-		var check = inputCheck();
+		var check = inputCheck($("#createBucket"));
 		if(check == false){
 			alert('모든 항목을 입력해주세요.');
 			return;
 		}
 		
-		var data = jQuery("#createBucket").serializeArray();
+		var data = $("#createBucket").serializeArray();
 	
 		$.ajax({
 			type : "post",
 			url : "<%= request.getContextPath()%>/createBucket",
 			data : data,
 			error : function(xhr, status, error) {
-				alert(data.result);
+				alert(error);
 			},
 			success : function(data) {
-				alert(data.result);
-				location.reload();
+				alert(data);
+				if(data.includes("생성"))
+					location.reload();
 			}
 		});
 	}
 	
-	function dropBucketNow() {
+	function dropBucketNow(chk) {
 		
-		var check = dropInputCheck();
-		if(check == false){
-			alert('모든 항목을 입력해주세요.');
-			return;
-		}
 		
-		var data = jQuery("#dropBucket").serializeArray();
-	
 		$.ajax({
 			type : "post",
-			url : "<%= request.getContextPath()%>/dropBucket",
-			data : data,
+			url : "<%= request.getContextPath()%>/dropBucket?bucketName="+chk.id,
 			error : function(xhr, status, error) {
-				alert('에러입니다. 정상적인 값을 입력해주세요.');
+				alert(error);
 			},
 			success : function(data) {
-				alert(data.result);
-				location.reload();
-			}
-		});
-	}
-	
-	function inputCheck(){
-		let inputText = $("#createBucket input");
-		
-		for(var i=0;i<inputText.length; i++){
-			
-			if(inputText[i].value == "" || inputText[i].value == null){
+				alert(data);
 				
-				return false;
+				if(data.includes("삭제"))
+					location.reload();
 			}
-		}		
-		return true;
+		}); 
 	}
-	
-	function dropInputCheck(){
-		let inputText = $("#dropBucket input");
-		
-		for(var i=0;i<inputText.length; i++){
-			
-			if(inputText[i].value == "" || inputText[i].value == null){
-				
-				return false;
-			}
-		}		
-		return true;
-	}
-	
 	
 </script>
 <body>
@@ -93,7 +61,7 @@
 	
 	<div class=container-fluid>
 		<div class=row>
-	        <div class="col-xl-5 borderDiv mx-auto"><br>
+	        <div class="col-xl-7 borderDiv mx-auto"><br>
 	        	<h4> &nbsp; 버킷 리스트</h4><br>
 				<div>
 					<c:if test="${empty bucketList}">
@@ -103,11 +71,12 @@
 					<c:if test="${not empty bucketList}">
 						<table class="bucketTable table table-striped">
 							<colgroup>
-								<col width="32%" />
+								<col width="15%" />
 							    <col width="5%" />
 							    <col width="14%" />
-							    <col width="40%" />
+							    <col width="30%" />
 							    <col width="10%" />
+							    <col width="12%" />
 							</colgroup>
 							<tr>
 								<th>버킷이름</th>
@@ -115,6 +84,7 @@
 								<th>문서 수</th>
 								<th>메모리 사용량</th>
 								<th>디스크 사용량</th>
+								<th></th>
 							</tr>
 					
 					
@@ -126,7 +96,8 @@
 								<td>${list.itemCount }</td>
 								<td>${list.quotaPercentUsed }% (${list.memUsed }MB / ${list.ram }MB)</td>
 								<td>${list.diskUsed }MB </td>
-							
+								<td><button type="button" class="btn btn-warning float-right" id=${list.name } onclick="dropBucketNow(this);">제거</button> </td>
+								
 							</tr>
 							
 						</c:forEach>
@@ -138,30 +109,15 @@
 	        <form id="createBucket" name="createBucket" class="flexDiv" >
 	        	<h4> &nbsp; 버킷 생성</h4><br>
 				
-					<div >
-						# 호스트 이름 <input type="text" name="hostName" />
-					</div>
-					<div>
-						# 포트 번호 <input type="text" name="portNumber" />
-					</div>
-		
-					<div>
-						# 유저 이름 <input type="text" name="userName" />
-					</div>
-		
-					<div>
-						# 패스워드 <input type="password" name="userPassword" />
-					</div>
-		
 					<div>
 						# 버킷의 이름 <input type="text" id="newBucketName" name="newBucketName">
 					</div>
 		
 					<div>
 						# 버킷 타입 <select name="newBucketType">
-							<option selected value="couchbase">Couchbase</option>
-							<option value="ephemeral">Ephemeral</option>
-							<option value="memcached">Memcached</option>
+							<option selected value="COUCHBASE">Couchbase</option>
+							<option value="EPHEMERAL">Ephemeral</option>
+							<option value="MEMCACHED">Memcached</option>
 						</select>
 					</div>
 		
@@ -180,10 +136,10 @@
 					<div>
 						# Index 복제 여부
 						<div>
-							<input type="radio" name="indexReplicaEnable" value="1" />
+							<input type="radio" name="indexReplicaEnable" value="true" />
 							<label for="True">True</label>
 							
-							<input type="radio" name="indexReplicaEnable" value="0" checked /> 
+							<input type="radio" name="indexReplicaEnable" value="false" checked /> 
 							<label for="False">False</label>
 						</div>
 					</div>
@@ -191,10 +147,10 @@
 					<div>
 						# Flush 기능 활성화 여부
 						<div>
-							<input type="radio" name="flushEnable" value="1" />	
+							<input type="radio" name="flushEnable" value="true" />	
 							<label for="True">True</label>
 							
-							<input type="radio" name="flushEnable" value="0" checked /> 
+							<input type="radio" name="flushEnable" value="false" checked /> 
 							<label for="False">False</label>
 						</div>
 					</div>
@@ -203,33 +159,6 @@
 					<button type="button" class="btn btn-primary float-right" onclick="createNewBucket();">실행</button>
 				</form>
 	        </div>
-	        <div class="col-xl-3 borderDiv mx-auto" ><br>
-	        	<h4>&nbsp; 버킷 제거</h4><br>
-				<form id="dropBucket" name="dropBucket" class=flexDiv>
-					<div >
-						# 호스트 이름 <input type="text" name="hostName" />
-					</div>
-					
-					<div>
-						# 포트 번호 <input type="text" name="portNumber" />
-					</div>
-		
-					<div>
-						# 유저 이름 <input type="text" name="userName" />
-					</div>
-		
-					<div>
-						# 패스워드 <input type="password" name="userPassword" />
-					</div>
-		
-					<div>
-						# 버킷의 이름 <input type="text" id="bucketName" name="bucketName">
-					</div>
-		
-					<button type="button" class="btn btn-warning float-right" onclick="dropBucketNow();">제거</button>
-				</form>
-	        </div>
-	        
 	    </div>
     </div>
 	

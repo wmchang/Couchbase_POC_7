@@ -16,7 +16,16 @@
     overflow: hidden;
 	}
 </Style>
+<%
+	String limit = request.getParameter("limit");
+
+	if(limit == null)
+		limit = "30"; 
+	
+	
+%>
 </head>
+
 <script>
 
 	function openDocument(docId){
@@ -60,6 +69,38 @@
 		
 		document.getElementById("documentPageForm").submit();
 	}
+	
+	
+	function createPrimaryIndex(){
+		
+		$.ajax({
+			type : "post",
+			url : "<%= request.getContextPath()%>/createPrimaryIndex?bucketName=${bucketName }",
+			error : function(xhr, status, error) {
+				alert(error);
+			},
+			success : function(data) {
+				
+				
+				if(data.includes("생성")){
+					alert(data);
+					location.reload();
+				}
+				else if(data.includes('IndexExistsException')){
+					
+					if(confirm('인덱스가 이미 존재합니다. 문서를 생성하시겠습니까?')){
+						newDocument();
+					}
+				}
+				else if(data.includes('IndexFailureException')){
+					alert('Memcached 버킷은 지원하지않습니다.');
+				}
+				else {
+					alert(data);
+				}
+			}
+		}); 
+	}
 </script>
 <body>
 	
@@ -77,6 +118,8 @@
 					<c:if test="${empty documentList}">
 						<h5> &nbsp; 문서를 확인하려면</h5>
 						<h5> &nbsp; 서버 연결 및 환경 설정, 인덱스가 생성되어있는지 확인 해주십시오.</h5>
+						<h5> &nbsp; 또한 Memcached 버킷은 조회가 불가능합니다.</h5>
+						<button type="button" class="btn btn-primary" onclick="createPrimaryIndex();">Primary Index 생성</button>
 					</c:if>
 	
 	
@@ -84,7 +127,7 @@
 					<div style="float:right;">
 						<form id=documentPageForm action=documentPage style=display:inline-block;>
 							<label>limit: </label>
-							<input type=text name=limit placeholder="default=30">
+							<input type=text name=limit value=<%=limit %>>
 						
 							<label >Bucket:</label>
 							<select name=bucketName onchange=bucketChange() id=bucketName>

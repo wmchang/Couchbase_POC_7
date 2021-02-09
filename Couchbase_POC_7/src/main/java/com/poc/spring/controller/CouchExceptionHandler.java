@@ -41,7 +41,10 @@ public class CouchExceptionHandler {
 	public Object ParsingCatch(ParsingFailureException e) {
 		if(e.toString().contains("Input was not a statement")) {
 			return "[ERROR]: Statement가 잘못되었습니다."; 
-		}		
+		}
+		else if(e.toString().contains("syntax error")) {
+			return "[ERROR]: Statement가 잘못되었습니다."; 
+		}
 		
 		e.printStackTrace();
 		return "[ERROR]: JSON 파싱에 실패했습니다.";

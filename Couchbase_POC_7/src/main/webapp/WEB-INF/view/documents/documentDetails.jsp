@@ -9,6 +9,7 @@
 <link rel="stylesheet" type="text/css" href="<%= request.getContextPath()%>/static/css/index.css">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- 합쳐지고 최소화된 최신 자바스크립트 -->
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="<%= request.getContextPath()%>/static/js/head_function.js"></script>
 
 
 <style>
@@ -37,8 +38,10 @@ textarea {
 				alert('오류가 발생했습니다. 제대로된 JSON 형식인지 확인해주십시오.');
 			},
 			success : function(data) {
-				alert('수정이 완료되었습니다.');
-				window.close();
+				alert(data);
+				_checkClose(data,"변경");
+				if(data.includes('변경'))
+					opener.document.location.reload();
 			}
 		});
 	}
@@ -59,17 +62,14 @@ textarea {
 			success : function(data) {
 				alert('해당 Document가 삭제되었습니다.');
 				window.close();
+				opener.document.location.reload();
 			}
 		});
-	}
-	
-	function closeEvent(){
-	    opener.document.location.reload();
 	}
 
 </script>
 
-<body onunload="closeEvent();">
+<body>
 	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 	<div style=text-align:center;margin-top:15px;>

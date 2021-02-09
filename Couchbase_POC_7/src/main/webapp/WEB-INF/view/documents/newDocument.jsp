@@ -42,7 +42,8 @@
 			},
 			success: function(data){
 				alert(data);
-				window.close();
+				if(data.includes("»ý¼º"))
+					window.close();
 			}
 		});
 	}

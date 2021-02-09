@@ -9,7 +9,7 @@
 <script>
 	function randomData() {
 		
-		var check = inputCheck();
+		var check = inputCheck($("#randomDataForm"));
 		if(check == false){
 			alert('모든 항목을 입력해주세요.');
 			return;
@@ -22,25 +22,12 @@
 			url : "<%= request.getContextPath()%>/randomData",
 			data : data,
 			error : function(xhr, status, error) {
-				alert('입력이 잘못되었습니다.');
+				alert(error);
 			},
 			success : function(data) {
 				alert(data);
 			}
 		});
-	}
-	
-	function inputCheck(){
-		let inputText = $("#randomDataForm input");
-		
-		for(var i=0;i<inputText.length; i++){
-			
-			if(inputText[i].value == "" || inputText[i].value == null){
-				
-				return false;
-			}
-		}		
-		return true;
 	}
 </script>
 <body>
