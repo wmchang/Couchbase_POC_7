@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=EUC-KR"
+<%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
@@ -23,6 +23,7 @@
 		limit = "30"; 
 	
 	
+	
 %>
 </head>
 
@@ -44,7 +45,6 @@
 		}
 		
 		var document_window = window.open('documentDetails?documentId='+docId+'&bucketName=${bucketName}','팝업스','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
-		
 	}
 	
 	function newDocument(){
@@ -67,24 +67,14 @@
 		if(document.getElementById("bucketName").value=='-Select Bucket-')
 			return;
 		
-		$('#scopeName').val('');
-		$('#collectionName').val('');
+		document.getElementById("documentPageForm").submit();
+	}
+	
+	function scopeOrCollectionChange(){
+
+		document.getElementById("documentPageForm").submit();
 		
-		document.getElementById("documentPageForm").submit();
 	}
-	
-	function scopeChange(){
-
-		$('#collectionName').val('');
-
-		document.getElementById("documentPageForm").submit();
-	}
-	
-	function collectionChange(){
-
-		document.getElementById("documentPageForm").submit();
-	}
-	
 	
 	function createPrimaryIndex(){
 		
@@ -151,14 +141,14 @@
 							</select>
 						
 							<label >Scope:</label>
-							<select name=scopeName onchange=scopeChange() id=scopeName>
+							<select name=scopeName onchange=scopeOrCollectionChange() id=scopeName>
 								<c:forEach items="${scopeList }" var="list">
 									<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
 								</c:forEach>
 							</select>
 							
 							<label >Collection:</label>
-							<select name=collectionName onchange=collectionChange id=collectionName>
+							<select name=collectionName onchange=scopeOrCollectionChange() id=collectionName>
 								<c:forEach items="${collectionList }" var="list">
 									<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
 								</c:forEach>
@@ -188,11 +178,20 @@
 
 							<c:forEach items="${documentList }" var="list">
 								<tr>
-									<td><a href="#" onclick="openDocument('${list.id}')" class=overText>${list.id }</a></td>
-	
-									<td class=overText>${list.content }</td>
+								
+									<c:choose>
+									
+										<c:when test="${list.id eq 'emptyDocumentList'}">
+											<td colspan=2> ${list.content }</td>
+										</c:when>
+										
+										<c:otherwise>
+											<td><a href="#" onclick="openDocument('${list.id}')" class=overText>${list.id }</a></td>
+											<td class=overText>${list.content }</td>
+										</c:otherwise>
+										
+									</c:choose>
 								</tr>
-	
 							</c:forEach>
 						</table>
 					</c:if>

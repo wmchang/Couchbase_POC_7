@@ -45,6 +45,7 @@ import com.couchbase.client.java.kv.MutationResult;
 import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import com.couchbase.client.java.manager.bucket.BucketType;
+import com.couchbase.client.java.manager.bucket.DropBucketOptions;
 import com.couchbase.client.java.manager.collection.CollectionSpec;
 import com.couchbase.client.java.manager.collection.ScopeSpec;
 import com.couchbase.client.java.query.QueryResult;
@@ -59,6 +60,7 @@ import com.poc.spring.dto.BucketSettingDTO;
 import com.poc.spring.dto.CompactionDTO;
 import com.poc.spring.dto.ConnectDTO;
 import com.poc.spring.dto.SettingDTO;
+import com.poc.spring.dto.querySettingsDTO;
 import com.poc.spring.util.ServiceUtils;
 
 @Service
@@ -478,23 +480,30 @@ public class CouchbaseService {
 		if(bucket.name().equals(request.getParameter("bucketName"))) {
 			return "연결되어있는 버킷은 제거할 수 없습니다."; 
 		}
+		
+		
 		manager.dropBucket(request.getParameter("bucketName"));
+
+		cluster.disconnect();
+		cluster = Cluster.connect(dto.getHostname(), ClusterOptions.clusterOptions(dto.getUsername(), dto.getPassword()).environment(env));
+		cluster.buckets().getBucket(dto.getBucketName());
+		bucket = cluster.bucket(dto.getBucketName());		
 		
 		return "삭제되었습니다.";
 	}
 	
-	public Map<String, Object> getScopeCollection(HttpServletRequest request) {
+	public Map<String, Object> getScopeCollection(Map<String,Object> requestMap) {
 		
 		if(dto == null)
 			return null;
 		else if(bucket == null)
 			return null;
 		
-		String bucketName = request.getParameter("bucketName");
+		String bucketName = (String) requestMap.get("bucketName");
 		if(bucketName==null)
 			bucketName = bucket.name();
 		
-		String scopeName = request.getParameter("scopeName");
+		String scopeName = (String) requestMap.get("scopeName");
 		if(scopeName == null)
 			scopeName ="_default";
 	
@@ -527,7 +536,7 @@ public class CouchbaseService {
 	}
 	
 	// Document
-	public Object getDocumentList(HttpServletRequest request){
+	public Object getDocumentList(Map<String,Object> requestMap){
 		
 		try {
 			if(bucket == null)
@@ -535,31 +544,20 @@ public class CouchbaseService {
 			 // select meta(t).id from `test` as t limit 30;
 			
 			String limit;
-			if(request.getParameter("limit")==null)
+			if(requestMap.get("limit")==null)
 				limit = "30";
 			else
-				limit = request.getParameter("limit");
+				limit = (String) requestMap.get("limit");
 			
-			String bucketName = request.getParameter("bucketName");
-			String scopeName = request.getParameter("scopeName");
-			String collectionName = request.getParameter("collectionName");
+			String bucketName = (String) requestMap.get("bucketName");
+			String scopeName = (String) requestMap.get("scopeName");
+			String collectionName = (String) requestMap.get("collectionName");
 			
-			if(request.getParameter("bucketName")==null)
-				bucketName = bucket.name();
-			if(scopeName == null)
-				scopeName = "_default";
-			
-			if(cluster.buckets().getBucket(bucketName).bucketType() == BucketType.MEMCACHED) {
-				
-				return "MemcachedBucketNotSupported";
-			}
 			
 			 StringBuilder statement = new StringBuilder();
 			 
 			 if(limit.length() < 0)
 				 limit = "30";
-			 
-			 
 			 
 			 statement.append("select *, meta(t).id from `");
 			 statement.append(bucketName);
@@ -571,23 +569,60 @@ public class CouchbaseService {
 			 statement.append(limit);
 			 System.out.println(statement);
 			 
-			 List<Object> list = new ArrayList<Object>();
-			 
 			 QueryResult result = cluster.query(statement.toString());
 			 
-			 System.out.println(cluster.query(statement.toString()));
+			 List<Object> list = new ArrayList<Object>();
 			 
 			 for(JsonObject row : result.rowsAsObject()) {
-	
+				 
 				 Map<Object, Object> resultMap = new HashMap<Object, Object>();
 				 resultMap.put("id", row.getString("id"));
 				 resultMap.put("content",  row.getObject("t") );
+				 
 				 list.add(resultMap);
 			 }
+			 
+			 if(list.size() == 0) {
+				 Map<Object, Object> resultMap = new HashMap<Object, Object>();
+
+				 resultMap.put("id","emptyDocumentList");
+				 resultMap.put("content",  "문서가 존재하지 않습니다." );
+				 list.add(resultMap);
+			 }
+			 
 			 return list;
 		}
 		catch(PlanningFailureException e) {
-			return "NotExistsIndex";
+			 List<Object> list = new ArrayList<Object>();
+			 Map<Object, Object> resultMap = new HashMap<Object, Object>();
+
+			 resultMap.put("id","emptyDocumentList");
+			 resultMap.put("content",  "문서가 존재하지 않습니다." );
+			 list.add(resultMap);
+			
+			return list;
+		}
+		catch(IndexFailureException e) {
+			 List<Object> list = new ArrayList<Object>();
+			 Map<Object, Object> resultMap = new HashMap<Object, Object>();
+
+			 resultMap.put("id","emptyDocumentList");
+			 
+			 if(e.toString().equals("not supported memcached")) {
+				 resultMap.put("content", "Memcached Bucket은 조회가 불가능합니다." );
+			 }else {
+				 resultMap.put("content",  "문서가 존재하지 않습니다." );
+
+			 }
+			 list.add(resultMap);
+			 
+			return list;
+		}
+		catch(Exception e) {
+			
+			e.printStackTrace();
+			
+			return null;
 		}
 		
 	}
@@ -681,7 +716,6 @@ public class CouchbaseService {
 	public Object dropDocument(String bucketName,String documentId) {
 		
 		MutationResult result = cluster.bucket(bucketName).defaultCollection().remove(documentId);
-		System.out.println(result.toString());
 		 
 		return "문서가 정상적으로 삭제되었습니다.";
 	}
@@ -760,7 +794,6 @@ public class CouchbaseService {
 		return list;
 	}
 
-	
 	public Object getFTSResult(HttpServletRequest request) {
 		
 		String indexName = request.getParameter("indexName");
@@ -844,100 +877,143 @@ public class CouchbaseService {
 	
 	// Upload File
 	
-	public Map<String, Object> uploadFile(MultipartHttpServletRequest mRequest) throws Exception {
+	public Object uploadFile(MultipartHttpServletRequest mRequest) throws Exception {
 		
+		if(bucket == null)
+			return "Bucket을 연결해주세요.";
 		
-		String strLocalPath = "C:/upload/"; 			// 로컬 업로드 경로
-		File file = new File(strLocalPath);				// 로컬 경로 파일
-		String strFilePath = "";						// 파일 경로 + 파일명
+		String createLocalPath = "C:/upload/"; 			// 로컬 업로드 경로
+		File newFile = new File(createLocalPath);
+		String importFilePath = "";						// 파일 경로 + 파일명
 		String docID = mRequest.getParameter("docId");	// docID
+		String cbPath = mRequest.getParameter("cbPath");
+		String columnOfExcel = mRequest.getParameter("columnOfExcel");
+		String fileExtension = mRequest.getParameter("fileExtension");
 		
-		 StringBuilder statement = new StringBuilder();
-		 
-		 // select count(*) from `test`as t where meta(t).id like "test__%";
-		 
-		 statement.append("select count(*) from `");
-		 statement.append(bucket.name());
-		 statement.append("` as t where meta(t).id like \"");
-		 statement.append(docID+"__%\"");
-		 
-		 QueryResult result = cluster.query(statement.toString());
-		 
-		 
-		 
-		 List<JsonObject> list = result.rowsAsObject();
-		 
-		 JsonObject content =list.get(0);
-		 int num = Integer.parseInt(content.get("$1").toString());
-		 
-		 docID = docID+"_"+(num+1);
+		if(columnOfExcel == null)
+			columnOfExcel = "false";
 		
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		
-		if (!file.isDirectory()) { 			// 파일 디렉토리 확인 및 디렉토리 생성
-			file.mkdir();
+		if (!newFile.isDirectory()) { 			// 파일 디렉토리 확인 및 디렉토리 생성
+			newFile.mkdir();
 		}
 		
-		MultipartFile multipartFile = mRequest.getFile("fileName"); 	// fileName Request
-		String strOriginFileName = multipartFile.getOriginalFilename(); // Original FileName
-		strFilePath = strLocalPath + strOriginFileName; 				// File Path
-
-		System.out.println(strFilePath);
+		StringBuilder statement = new StringBuilder();
+		 
+		// select count(*) from `test`as t where meta(t).id like "test__%";
+		statement.append("select count(*) from `");
+		statement.append(bucket.name());
+		statement.append("` as t where meta(t).id like \"");
+		statement.append(docID+"__%\"");
+		System.out.println(statement);
+		QueryResult result = cluster.query(statement.toString());
+		 
+		List<JsonObject> list = result.rowsAsObject();
+		JsonObject content =list.get(0);
+		int num = Integer.parseInt(content.get("$1").toString());
 		
-		int intSubstrDot = strOriginFileName.lastIndexOf("."); 					// 파일 확장자
-		String strExtention = strOriginFileName.substring(intSubstrDot + 1); 	// 파일 확장자
+		if(num != 0)
+			docID = docID+"_"+(num+1);
 		
-		String strThreadCount = mRequest.getParameter("threadCount");
-		int threadCnt = 0;
-		if(!"".equals(strThreadCount)) {
-			threadCnt = Integer.parseInt(strThreadCount);	 // thread Count
+		
+		MultipartFile file = mRequest.getFile("fileName"); 	// fileName Request
+		String originalName = file.getOriginalFilename(); // Original FileName
+		importFilePath = createLocalPath + originalName; 				// File Path
+		
+		if(!new File(importFilePath).exists()) {
+			file.transferTo(new File(importFilePath));		//FilePath에 파일 생성
 		}
-
-		if(!multipartFile.isEmpty()) {			//파일이 선택됐을 경우
-			
-			if(!new File(strFilePath).exists()) {
-				multipartFile.transferTo(new File(strFilePath));		//FilePath에 파일 생성
-			}
-			resultMap.put("suc","OK");
-			
-			if(StringUtils.isNotBlank(docID) && threadCnt>0) {			//문서 아이디가 공백이 아니며, 쓰레드 개수가 0 이상일 때
-				if (strExtention.equals("csv")) {					//파일 확장자가 csv일 경우
-					
-					CSVtoJSON csvToJson = new CSVtoJSON(bucket, multipartFile, strFilePath, docID, threadCnt, strExtention);
-					csvToJson.CSVtoJSON();
-					resultMap.put("mapFlag", "3");
-					resultMap.put("csvInsert", "csv 파일 \"" + strOriginFileName + "\"가 insert 되었습니다.");
-			
-				} else if (strExtention.equals("json")) {			//파일 확장자가 json일 경우
-					
-//					Object obj =  parser.parse(new FileReader(strFilePath));
-//			        JSONObject jsonObject =  (JSONObject) obj;
-//			        String jsonStr = jsonObject.toString();
-//					JsonObject content = JsonObject.fromJson(jsonStr);
-//					JsonDocument doc = JsonDocument.create(docID, content); 
-//					bucket.insert(doc);
-					CSVtoJSON csvToJson = new CSVtoJSON(bucket, multipartFile, strFilePath, docID, threadCnt, strExtention);
-					csvToJson.jsonUpload();
-					resultMap.put("mapFlag","4");
-					resultMap.put("jsonInsert","json 파일 \""+strOriginFileName+"\"이 insert 되었습니다.");
-					
-				} else {										//파일 확장자가 csv, json이 아닌 다른 것일 경우
-					System.out.println(strOriginFileName);
-					resultMap.put("mapFlag","2");
-					resultMap.put("ExtentionsCheck","확장자가 csv 및 json인 파일을 선택해주세요.");
-				}
+		
+		if(StringUtils.isNotBlank(docID)) {			//문서 아이디가 공백이 아니며, 쓰레드 개수가 0 이상일 때
+			if (fileExtension.equals("csv")) {					//파일 확장자가 csv일 경우
+				
+				StringBuilder csvCommand = new StringBuilder();
+				
+				csvCommand.append(cbPath);
+				csvCommand.append("/cbimport csv -c couchbase://");
+				csvCommand.append(dto.getHostname());
+				csvCommand.append(" -u ");
+				csvCommand.append(dto.getUsername());
+				csvCommand.append(" -p ");
+				csvCommand.append(dto.getPassword());
+				csvCommand.append(" -b ");
+				csvCommand.append(dto.getBucketName());
+				csvCommand.append(" -d file://");
+				csvCommand.append(importFilePath);
+				csvCommand.append(" -g ");
+				if(columnOfExcel.equals("true")) {
+					csvCommand.append("%");
+					csvCommand.append(docID);
+					csvCommand.append("%");
+				}else
+					csvCommand.append(docID);
+				csvCommand.append(" -t 2 ");
+				
+				String curlResult = serviceUtil.curlExcute(csvCommand.toString()).get("result").toString();
+				
+				return curlResult.substring(curlResult.indexOf("successfully"));
+				
+			} else if (fileExtension.equals("json")) {			//파일 확장자가 json일 경우
+				
+				StringBuilder jsonCommand = new StringBuilder();
+				
+				jsonCommand.append(cbPath);
+				jsonCommand.append("/cbimport json -c couchbase://");
+				jsonCommand.append(dto.getHostname());
+				jsonCommand.append(" -u ");
+				jsonCommand.append(dto.getUsername());
+				jsonCommand.append(" -p ");
+				jsonCommand.append(dto.getPassword());
+				jsonCommand.append(" -b ");
+				jsonCommand.append(dto.getBucketName());
+				jsonCommand.append(" -d file://");
+				jsonCommand.append(importFilePath);
+				jsonCommand.append(" -f lines -g ");
+				if(columnOfExcel.equals("true")) {
+					jsonCommand.append("%");
+					jsonCommand.append(docID);
+					jsonCommand.append("%");
+				}else
+					jsonCommand.append(docID);
+				jsonCommand.append(" -t 2 ");
+				
+				String curlResult = serviceUtil.curlExcute(jsonCommand.toString()).get("result").toString();
+				
+				return curlResult.substring(curlResult.indexOf("successfully"));
+				
+			} else if (fileExtension.equals("jsonList")){
+				
+				StringBuilder jsonCommand = new StringBuilder();
+				
+				jsonCommand.append(cbPath);
+				jsonCommand.append("/cbimport json -c couchbase://");
+				jsonCommand.append(dto.getHostname());
+				jsonCommand.append(" -u ");
+				jsonCommand.append(dto.getUsername());
+				jsonCommand.append(" -p ");
+				jsonCommand.append(dto.getPassword());
+				jsonCommand.append(" -b ");
+				jsonCommand.append(dto.getBucketName());
+				jsonCommand.append(" -d file://");
+				jsonCommand.append(importFilePath);
+				jsonCommand.append(" -f list -g ");
+				if(columnOfExcel.equals("true")) {
+					jsonCommand.append("%");
+					jsonCommand.append(docID);
+					jsonCommand.append("%");
+				}else
+					jsonCommand.append(docID);
+				jsonCommand.append(" -t 2 ");
+				
+				String curlResult = serviceUtil.curlExcute(jsonCommand.toString()).get("result").toString();
+				
+				return curlResult.substring(curlResult.indexOf("successfully"));
+				
 			}
 			else {
-				resultMap.put("mapFlag","1");
-				resultMap.put("idThreadCheck","문서 아이디와 쓰레드 개수에 빈칸 없이 입력해주세요.");
-				System.out.println("docID or threadCnt is Null");
+				return "확장자가 잘못되었습니다.";
 			}
-		}else {
-			resultMap.put("fileCheck","파일을 선택해주세요");
-			System.out.println("File is not Selected");
 		}
-
-		return resultMap;
+		return "?";
 	}
 
 	// Log
@@ -1183,8 +1259,102 @@ public class CouchbaseService {
 		
 		String result = serviceUtil.curlExcute(bucketCommand.toString()).get("result").toString();
 		
+		if(result.contains("정상적으로 완료")) {
+			result = "잠시 후 지정된 Bucket이 생성됩니다.";
+		}
+		
 		
 		return result;
 	}
 
+	// querySetting = whiteList error 
+	public Object setQuerySettings(querySettingsDTO querySettings) {
+		
+		if(dto == null)
+			return "서버 연결을 먼저 해주십시오.";
+		
+		try {
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(querySettings));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		
+		StringBuilder querySetCommand = new StringBuilder();
+		querySetCommand.append("curl -v -u ");
+		querySetCommand.append(dto.getUsername());
+		querySetCommand.append(":");
+		querySetCommand.append(dto.getHostname());
+		querySetCommand.append(" http://");
+		querySetCommand.append(dto.getHostname());
+		querySetCommand.append(":");
+		querySetCommand.append(dto.getPortNumber());
+		querySetCommand.append("/settings/querySettings -d queryTmpSpaceDir=\"");
+		querySetCommand.append(querySettings.getQueryTmpSpaceDir());
+		querySetCommand.append("\" -d queryTmpSpaceSize=");
+		querySetCommand.append(querySettings.getQueryTmpSpaceSize());
+		querySetCommand.append(" -d queryPipelineBatch=");
+		querySetCommand.append(querySettings.getQueryPipelineBatch());
+		querySetCommand.append(" -d queryPipelineCap=");
+		querySetCommand.append(querySettings.getQueryPipelineCap());
+		querySetCommand.append(" -d queryScanCap=");
+		querySetCommand.append(querySettings.getQueryScanCap());
+		querySetCommand.append(" -d queryTimeout=");
+		querySetCommand.append(querySettings.getQueryTimeout());
+		querySetCommand.append(" -d queryPreparedLimit=");
+		querySetCommand.append(querySettings.getQueryPreparedLimit());
+		querySetCommand.append(" -d queryCompletedLimit=");
+		querySetCommand.append(querySettings.getQueryPreparedLimit());
+		querySetCommand.append(" -d queryCompletedThreshold=");
+		querySetCommand.append(querySettings.getQueryCompletedThreshold());
+		querySetCommand.append(" -d queryLogLevel=");
+		querySetCommand.append(querySettings.getQueryLogLevel());
+		querySetCommand.append(" -d queryMaxParallelism=");
+		querySetCommand.append(querySettings.getQueryMaxParallelism());
+		querySetCommand.append(" -d queryN1QLFeatCtrl=");
+		querySetCommand.append(querySettings.getQueryN1QLFeatCtrl());
+		System.out.println(querySetCommand);
+		
+		String result1 = serviceUtil.curlExcute(querySetCommand.toString()).get("result").toString();
+		System.out.println(result1);
+		if(result1.contains("queryTmpSpaceDir")) {
+			result1 = "설정이 완료되었습니다";
+		}
+		
+		
+		
+		// curl -v -X POST -u Admin:tf4220 http://localhost:8091/settings/querySettings/curlWhitelist -d {"all_access": false, "allowed_urls": ["https://company1.com"], disallowed_urls": ["https://company2.com"]}
+//		StringBuilder whiteListCommand = new StringBuilder();
+//		whiteListCommand.append("curl -v -u ");
+//		whiteListCommand.append(dto.getUsername());
+//		whiteListCommand.append(":");
+//		whiteListCommand.append(dto.getPassword());
+//		whiteListCommand.append(" http://");
+//		whiteListCommand.append(dto.getHostname());
+//		whiteListCommand.append(":");
+//		whiteListCommand.append(dto.getPortNumber());
+//		whiteListCommand.append("/settings/querySettings/curlWhitelist -d {\r\"all_access\":");
+//		whiteListCommand.append(querySettings.isCurlAccessCheck());
+//		
+//		if(querySettings.isCurlAccessCheck()==false) {
+//			whiteListCommand.append(",\r\"allowed_urls\": [");
+//			whiteListCommand.append(querySettings.getAllowedURL());
+//			whiteListCommand.append("],\r\"disallowed_urls\": [");
+//			whiteListCommand.append(querySettings.getDisallowedURL());
+//			whiteListCommand.append("]}");
+//			
+//		}else
+//			whiteListCommand.append("}");
+//		
+//		System.out.println(whiteListCommand);
+//		
+//		String result = serviceUtil.curlExcute(whiteListCommand.toString()).get("result").toString();
+//		
+//		System.out.println(result);
+
+		
+		
+		return "설정이 완료되었습니다.";
+	}
+	
 }
+

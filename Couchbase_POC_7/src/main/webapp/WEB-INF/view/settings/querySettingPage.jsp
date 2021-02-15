@@ -13,7 +13,7 @@
 
 	function setQuerySettings() {
 
-		var check = inputCheck();
+		var check = inputCheck($("#querySettingForm"));
 		if (check == false) {
 			alert('모든 항목을 입력해주세요.');
 			return;
@@ -33,21 +33,6 @@
 				alert(data);
 			}
 		});
-	}
-
-	function inputCheck() {
-		let inputText = $("#querySettingForm input");
-
-		for (var i = 0; i < inputText.length; i++) {
-
-			if (inputText[i].value == "" || inputText[i].value == null) {
-				if(inputText[i].disabled){
-					continue;
-				}
-				return false;
-			}
-		}
-		return true;
 	}
 	
 	function urlRestrictChecking(){
@@ -94,39 +79,39 @@
 			<div class="mx-auto col-lg-5 flexDiv"><br>
 				<div>
 					# Query가 사용하는 임시 파일 경로:
-					<input type="text" name="queryTmpSpaceDir" style=width:250px; />
+					<input type="text" name="queryTmpSpaceDir" style=width:250px; value="D:/Couchbase/Server/var/lib/couchbase/tmp" />
 				</div>
 				<div>
 					# Query가 사용하는 임시 파일 크기:
-					<input type="text" name=queryTmpSpaceSize placeholder=5120 />
+					<input type="text" name=queryTmpSpaceSize value=5120 />
 				</div>
 				<div>
 					# 병렬 처리 가능 최대 수:
-					<input type="text" name=queryPipelineBatch placeholder=16 />
+					<input type="text" name=queryPipelineBatch value=16 />
 				</div>
 				<div>
 					# Fetch에서 버퍼링 가능한 최대 수: 
-					<input type="text" name=queryPipelineCap placeholder=512 />
+					<input type="text" name=queryPipelineCap value=512 />
 				</div>
 				<div>
 					# 인덱서와 쿼리서비스 사이의 최대 버퍼 채널 크기:
-					<input type="text" name=queryScanCap  placeholder=512 />
+					<input type="text" name=queryScanCap  value=512 />
 				</div>
 				<div>
 					# 요청에 사용할 최대 시간:
-					<input type="text" name=queryTimeout  placeholder=0 />
+					<input type="text" name=queryTimeout  value=0 />
 				</div>
 				<div>
 					# 캐시에 보관할 쿼리의 최대 수: 
-					<input type="text" name=queryPreparedLimit placeholder=16384 />
+					<input type="text" name=queryPreparedLimit value=16384 />
 				</div>
 				<div>
 					# 완료된 요청 카탈로그에 기록할 요청의 수: 
-					<input type="text" name=queryCompletedLimit  placeholder=4000 />
+					<input type="text" name=queryCompletedLimit  value=4000 />
 				</div>
 				<div>
 					# 완료된 요청 카탈로그에 기록되는 기간(밀리초)
-					<input type="text" name=queryCompletedThreshold  placeholder=1000 />
+					<input type="text" name=queryCompletedThreshold  value=1000 />
 				</div>
 				<div>
 					# 로그 레벨 <select name="queryLogLevel" class=docSelect>
@@ -141,7 +126,7 @@
 				</div>
 				<div>
 					# 병렬 집계를 위한 최대 인덱스 파티션의 수
-					<input type="text" name=queryMaxParallelism  placeholder=1 />
+					<input type="text" name=queryMaxParallelism  value=1 />
 				</div>
 				<div>
 					# N1QL Feature Controller (기술 지원용)

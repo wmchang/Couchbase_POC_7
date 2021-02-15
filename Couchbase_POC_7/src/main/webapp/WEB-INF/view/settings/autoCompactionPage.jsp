@@ -89,24 +89,20 @@
 				<h4> &nbsp; 자동 압축 </h4><br>
 					<h5>- 데이터베이스 조각화 </h5>
 					<div>
-						<input type='hidden' name="fragmentationCheckDatabasePer" value='false'>
 						<input type="checkbox" name="fragmentationCheckDatabasePer" value="true" style=margin-top:10px; checked onchange=compactionChecking(this); />
 						<input type="text" name="fragmentationPercentDatabase" id=fragmentationPercentDatabase class=doc style=width:100px; value=30 />%
 					</div><br>
 					<div>
-						<input type='hidden' name="fragmentationCheckDatabaseMB" value='false'>
 						<input type="checkbox" name="fragmentationCheckDatabaseMB" value="true" style=margin-top:10px; onchange=compactionChecking(this); />
 						<input type="text" name="fragmentationMBDatabase" id=fragmentationMBDatabase class=doc style=width:100px; disabled  />MB
 					</div>
 					
 					<h5>- 뷰 조각화</h5>
 					<div>
-						<input type='hidden' name="fragmentationCheckViewPer" value='false'>
 						<input type="checkbox" name="fragmentationCheckViewPer" value="true" style=margin-top:10px; checked  onchange=compactionChecking(this); />
 						<input type="text" name="fragmentationPercentView" id=fragmentationPercentView class=doc style=width:100px; value=30 />%
 					</div><br>
 					<div>
-						<input type='hidden' name="fragmentationCheckViewMB" value='false'>
 						<input type="checkbox" name="fragmentationCheckViewMB" value="true" style=margin-top:10px; onchange=compactionChecking(this); />
 						<input type="text" name="fragmentationMBView" id=fragmentationMBView  class=doc style=width:100px; disabled />MB
 					</div><br>

@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=EUC-KR"
-    pageEncoding="EUC-KR"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,13 +6,13 @@
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css" href="<%= request.getContextPath()%>/static/css/index.css">
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- ÇÕÃÄÁö°í ÃÖ¼ÒÈ­µÈ ÃÖ½Å ÀÚ¹Ù½ºÅ©¸³Æ® -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- í•©ì³ì§€ê³  ìµœì†Œí™”ëœ ìµœì‹  ìë°”ìŠ¤í¬ë¦½íŠ¸ -->
 
 <style>
 	input[type="text"]{
-		height: auto; /* ³ôÀÌ ÃÊ±âÈ­ */
-		line-height: normal; /* line-height ÃÊ±âÈ­ */
-		padding: .6em .02em; /* ¿©¹é ¼³Á¤ */
+		height: auto; /* ë†’ì´ ì´ˆê¸°í™” */
+		line-height: normal; /* line-height ì´ˆê¸°í™” */
+		padding: .6em .02em; /* ì—¬ë°± ì„¤ì • */
 		width:200px;
 	}
 	textarea {
@@ -38,11 +37,11 @@
 			url:	"<%= request.getContextPath()%>/addDocument",
 			data:	data,
 			error:	function(xhr, status, error){
-				alert('¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù. Á¦´ë·ÎµÈ JSONÇü½ÄÀÎÁö È®ÀÎÇØÁÖ½Ê½Ã¿À.');
+				alert('ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤. ì œëŒ€ë¡œëœ JSONí˜•ì‹ì¸ì§€ í™•ì¸í•´ì£¼ì‹­ì‹œì˜¤.');
 			},
 			success: function(data){
 				alert(data);
-				if(data.includes("»ı¼º"))
+				if(data.includes("ìƒì„±"))
 					window.close();
 			}
 		});
@@ -64,7 +63,7 @@
 	
 	<br>
 	<div style="text-align:right;margin-right:15px;">
-		<button class="btn btn-primary" onclick="addDocument()">»ı¼ºÇÏ±â</button>
+		<button class="btn btn-primary" onclick="addDocument()">ìƒì„±í•˜ê¸°</button>
 	</div>
 	
 </body>

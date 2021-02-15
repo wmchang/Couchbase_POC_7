@@ -28,20 +28,9 @@ function uploadFile() {
 		},
 
 		success : function(data) {
-			var obj = eval(data);
-			if (obj.suc == "OK") {
-				if (obj.mapFlag == "1") {
-					$('#uploadResult').val(obj.idThreadCheck);
-				} else if (obj.mapFlag == "2") {
-					$('#uploadResult').val(obj.ExtentionsCheck);
-				} else if (obj.mapFlag == "3") {
-					$('#uploadResult').val(obj.csvInsert);
-				} else if (obj.mapFlag == "4") {
-					$('#uploadResult').val(obj.jsonInsert);
-				}
-			} else {
-				$('#uploadResult').val(obj.fileCheck);
-			}
+			
+			
+			alert(data);
 
 		}
 
@@ -62,14 +51,26 @@ function uploadFile() {
 	        <h4> &nbsp; CSV 혹은 JSON 파일 업로드 </h4><br>
 	        	<form id="fileUpload" name="fileUpload" enctype="multipart/form-data">
 					
-					<div>
-						문서 아이디 :
-						<input type="text" id="docId" name="docId" required="required" /> 
+		        	<div>
+						# 확장자 선택<br>
+						<input type="radio" name="fileExtension" value="csv" checked />
+						<label>CSV</label> &nbsp;
+						
+						<input type="radio" name="fileExtension" value="json"  /> 
+						<label>Json</label> &nbsp;
+						
+						<input type="radio" name="fileExtension" value="jsonList"  /> 
+						<label>Json List</label> &nbsp;
 					</div>
 					<div>
-						쓰레드 개수 :
-						<input type="text" name="threadCount"  required="required"
-								onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+						# 문서 아이디
+						(<input type="checkbox" name="columnOfExcel" value="true" checked ><span style=font-size:10px> 파일내 컬럼으로 지정 </span>)
+						<br>
+						<input type="text" id="docId" name="docId" required="required" />  
+					</div>
+					<div>
+						# cbimport 경로(Couchbase\Server\bin)<br>
+						<input type="text" name="cbPath"  required="required" />
 					</div><br>
 					<div>
 						파일 경로 : <input id="fileName" name="fileName" type=file

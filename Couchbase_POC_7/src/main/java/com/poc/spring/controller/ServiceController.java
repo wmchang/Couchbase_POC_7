@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.poc.spring.dto.CompactionDTO;
 import com.poc.spring.dto.SettingDTO;
+import com.poc.spring.dto.querySettingsDTO;
 import com.poc.spring.service.CouchbaseService;
 
 @Controller
@@ -63,8 +64,8 @@ public class ServiceController {
 	
 	@RequestMapping(value="/getScopeCollection", method=RequestMethod.POST) 
 	@ResponseBody
-	public Object getScopeCollection(HttpServletRequest request) throws Exception { 
-		return couchbaseService.getScopeCollection(request); 
+	public Object getScopeCollection(Map<String,Object> requestMap) throws Exception { 
+		return couchbaseService.getScopeCollection(requestMap); 
 	}
 	
 	// Create Primary Index
@@ -110,7 +111,7 @@ public class ServiceController {
 	// csv, json file upload
 	@RequestMapping(value="/fileUpload", method=RequestMethod.POST) 
 	@ResponseBody
-	public Map<String, Object> fileUpload(MultipartHttpServletRequest mRequest) throws Exception { 
+	public Object fileUpload(MultipartHttpServletRequest mRequest) throws Exception { 
 		return couchbaseService.uploadFile(mRequest); 
 	}
 	
@@ -129,11 +130,17 @@ public class ServiceController {
 		return couchbaseService.setCompactions(compactions);
 	}
 	
-	
 	@RequestMapping(value="/downSampleBucket", method=RequestMethod.POST) 
 	@ResponseBody
 	public Object downSampleBucket(HttpServletRequest request) throws Exception {
 		
 		return couchbaseService.downSampleBucket(request.getParameterValues("sampleBucket"));
+	}
+	
+	@RequestMapping(value="/setquerySettings", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object setquerySettings(querySettingsDTO querySettings) throws Exception {
+		
+		return couchbaseService.setQuerySettings(querySettings);
 	}
 }	

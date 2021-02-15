@@ -45,6 +45,25 @@
 		
 		
 	};
+	
+	function threadCheck(check){
+		if(check.value=='fixedValue'){
+			if(check.name=='readThread'){
+				$("input#readThreadNumber").removeAttr("disabled");
+			}
+			else{
+				$("input#writeThreadNumber").removeAttr("disabled");
+			}
+		}else{
+			
+			if(check.name=='readThread'){
+				$("input#readThreadNumber").attr("disabled", true);
+			}
+			else{
+				$("input#writeThreadNumber").attr("disabled", true);
+			}
+		}
+	}
 
 </script>
 <body>

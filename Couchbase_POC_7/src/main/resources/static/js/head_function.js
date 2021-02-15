@@ -5,8 +5,6 @@
 	// id에 해당 radio랑 같은 id를 맞춰주면 된다.
 	function radioDisableChecking(chk){
 		
-		console.log(chk);
-		
 		if(chk.value == 'false'){
 			$("input#"+chk.id).attr("disabled", true);
 			$("input[name="+chk.name+"]").removeAttr("disabled");
@@ -28,7 +26,7 @@
 		}
 	}
 	
-	// 넣어야하는 input text 항목들 빈 값 없나 체크해주는 메소드.
+	// 넣어야하는 input항목,textarea 빈 값 없나 체크해주는 메소드.
 	// form을 매개변수로 주면된다.
 	function inputCheck(forms){
 	

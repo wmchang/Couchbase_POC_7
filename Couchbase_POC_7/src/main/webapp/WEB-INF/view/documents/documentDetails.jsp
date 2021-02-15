@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=EUC-KR"
-    pageEncoding="EUC-KR"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,7 +6,7 @@
 <meta charset="EUC-KR">
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css" href="<%= request.getContextPath()%>/static/css/index.css">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- ÇÕÃÄÁö°í ÃÖ¼ÒÈ­µÈ ÃÖ½Å ÀÚ¹Ù½ºÅ©¸³Æ® -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- í•©ì³ì§€ê³  ìµœì†Œí™”ëœ ìµœì‹  ìë°”ìŠ¤í¬ë¦½íŠ¸ -->
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="<%= request.getContextPath()%>/static/js/head_function.js"></script>
 
@@ -35,20 +34,22 @@ textarea {
 			url : "<%= request.getContextPath()%>/documentUpsert",
 			data : data,
 			error : function(xhr, status, error) {
-				alert('¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù. Á¦´ë·ÎµÈ JSON Çü½ÄÀÎÁö È®ÀÎÇØÁÖ½Ê½Ã¿À.');
+				alert('ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤. ì œëŒ€ë¡œëœ JSON í˜•ì‹ì¸ì§€ í™•ì¸í•´ì£¼ì‹­ì‹œì˜¤.');
 			},
 			success : function(data) {
 				alert(data);
-				_checkClose(data,"º¯°æ");
-				if(data.includes('º¯°æ'))
-					opener.document.location.reload();
+				_checkClose(data,"ë³€ê²½");
 			}
 		});
 	}
 	
+	function closeEvent(){
+	    opener.document.location.reload();
+	}
+	
 	function deleteDocument(){
 		
-		if(confirm('»èÁ¦ÇÏ½Ã°Ú½À´Ï±î?') == false)
+		if(confirm('ì‚­ì œí•˜ì‹œê² ìŠµë‹ˆê¹Œ?') == false)
 			return;
 		let data = $("#documentForm").serializeArray();
 		
@@ -57,19 +58,18 @@ textarea {
 			url : "<%= request.getContextPath()%>/dropDocument",
 			data : data,
 			error : function(xhr, status, error) {
-				alert('¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù.');
+				alert('ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.');
 			},
 			success : function(data) {
 				alert(data);
 				window.close();
-				opener.document.location.reload();
 			}
 		});
 	}
 
 </script>
 
-<body>
+<body onunload="closeEvent();">
 	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 	<div style=text-align:center;margin-top:15px;>
@@ -80,7 +80,7 @@ textarea {
 		</form>
 	</div>
 	
-	<button class="btn btn-primary float-right" onclick="upsertDocument()" style=margin-right:15px;>ÀúÀå</button>
-	<button class="btn btn-primary float-right" onclick="deleteDocument()" style=margin-right:10px;>»èÁ¦</button>
+	<button class="btn btn-primary float-right" onclick="upsertDocument()" style=margin-right:15px;>ì €ì¥</button>
+	<button class="btn btn-primary float-right" onclick="deleteDocument()" style=margin-right:10px;>ì‚­ì œ</button>
 </body>
 </html>
