@@ -56,6 +56,8 @@
 	<div style=text-align:center;margin-top:15px;>
 		<form id=documentForm name=documentForm>
 			<input type="hidden" name=bucketName id=bucketName value='${bucketName }' />
+			<input type="hidden" name=scopeName id=scopeName value='${scopeName }' />
+			<input type="hidden" name=collectionName id=collectionName value='${collectionName }' />
 			<p>Document ID: <input type="text" name=documentId id=documentId class="doc"/></p>
 			<textarea id="documentText" name=documentText onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
 		</form>

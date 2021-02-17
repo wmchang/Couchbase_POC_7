@@ -100,11 +100,11 @@ public class ServiceUtils {
 		return serviceList;
 	}
 	
-	public List<Object> logMaker(StringBuilder command, String ...name){
+	public List<Map<String,Object>> logMaker(StringBuilder command, String ...name){
 		
 		String names[] = name;
-		List<Object> logList = new ArrayList<Object>();
-		Map<Object,Object> logMap = new HashMap<Object,Object>();
+		List<Map<String,Object>> logList = new ArrayList<Map<String,Object>>();
+		Map<String,Object> logMap = new HashMap<String,Object>();
 		
 		for(String logName : names) {
 			String cmd = command.substring(0, command.lastIndexOf("/"))+"/"+logName;

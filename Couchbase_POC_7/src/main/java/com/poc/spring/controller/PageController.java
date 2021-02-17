@@ -1,6 +1,8 @@
 package com.poc.spring.controller;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +26,6 @@ public class PageController {
 	@Autowired
 	ServiceUtils serviceUtil;
 	
-	private static String yetScopeName = null;
 	private static String yetBucketName = null;
 	
 	@RequestMapping("/")
@@ -65,9 +66,6 @@ public class PageController {
 				scopeName = "_default";
 				collectionName = "_default";
 				
-				requestMap.put("bucketName", bucketName);
-				requestMap.put("scopeName", scopeName);
-				requestMap.put("collectionName", collectionName);
 			}else {
 				bucketName = (String) requestMap.get("bucketName");
 				scopeName = (String)requestMap.get("scopeName");
@@ -78,40 +76,40 @@ public class PageController {
 				scopeName = "_default";
 				collectionName = "_default";
 				
-				requestMap.put("scopeName", scopeName);
-				requestMap.put("collectionName", collectionName);
-			}
-
-			if(!scopeName.equals(yetScopeName) && yetScopeName != null) { // ScopeName이 변경되면, CollectionName이 자동으로 해당 Scope에 존재하는 CollectionName으로 변경
+			}else {
+				Iterator<CollectionSpec> i = couchbaseService.cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
+				List<String> collectionList = new ArrayList<String>();
 				
-				if(scopeName.equals("_default")) {
-					collectionName = "_default";
-					requestMap.put("collectionName", collectionName);
-				}else {
+				while(i.hasNext()){
+					collectionList.add(i.next().name());
+				}
+				
+				if(!collectionList.contains(collectionName)) {
 					
-					Iterator<CollectionSpec> i = couchbaseService.cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
-					collectionName = i.next().name();
-					requestMap.put("collectionName", collectionName);
+					System.out.println(collectionList);
+					if(collectionList.contains("_default")) 
+						collectionName = "_default";
+					else
+						collectionName = collectionList.get(0);
 				}
 			}
-				
+			
 		}catch(NullPointerException e) { // bucket 과 연결되지 않았을 때
 			return "/documents/documentPage";
 		}
 		catch(ScopeNotFoundException e) {
 			scopeName = "_default";
 			collectionName = "_default";
-			
-			requestMap.put("scopeName", scopeName);
-			requestMap.put("collectionName", collectionName);
 		}
-		
-		yetScopeName = scopeName;
 		yetBucketName = bucketName;
 
 		model.addAttribute("bucketName",bucketName);
 		model.addAttribute("scopeName",scopeName);
 		model.addAttribute("collectionName",collectionName);
+		
+		requestMap.put("bucketName", bucketName);
+		requestMap.put("scopeName", scopeName);
+		requestMap.put("collectionName", collectionName);
 		
 		Object list = couchbaseService.getDocumentList(requestMap);
 		
@@ -134,6 +132,8 @@ public class PageController {
 	public String newDocument(Model model, HttpServletRequest request) { 
 		
 		model.addAttribute("bucketName", request.getParameter("bucketName"));
+		model.addAttribute("scopeName", request.getParameter("scopeName"));
+		model.addAttribute("collectionName", request.getParameter("collectionName"));
 		return "/documents/newDocument"; 
 	}
 	
@@ -141,7 +141,9 @@ public class PageController {
 	public String documentDetails(Model model, HttpServletRequest request) { 
 		
 		model.addAttribute("documentId", request.getParameter("documentId"));
-		model.addAttribute("documentDetails", couchbaseService.getDocumentDetails(request.getParameter("documentId"),request.getParameter("bucketName")));
+		model.addAttribute("scopeName", request.getParameter("scopeName"));
+		model.addAttribute("collectionName", request.getParameter("collectionName"));
+		model.addAttribute("documentDetails", couchbaseService.getDocumentDetails(request));
 		
 		String bucketName;
 		if(request.getParameter("bucketName")==null || request.getParameter("bucketName") =="")
@@ -222,4 +224,5 @@ public class PageController {
 	public String emailAlertsPage() { 
 		return "/settings/emailAlertsPage"; 
 	}
+
 }

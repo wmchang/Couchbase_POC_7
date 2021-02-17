@@ -1,3 +1,4 @@
+<%@page import="ch.qos.logback.core.recovery.ResilientSyslogOutputStream"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -22,8 +23,6 @@
 	if(limit == null)
 		limit = "30"; 
 	
-	
-	
 %>
 </head>
 
@@ -44,7 +43,7 @@
 			left += window.screen.width;
 		}
 		
-		var document_window = window.open('documentDetails?documentId='+docId+'&bucketName=${bucketName}','팝업스','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		var document_window = window.open('documentDetails?documentId='+docId+'&bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업스','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
 	}
 	
 	function newDocument(){
@@ -60,7 +59,7 @@
 			left += window.screen.width;
 		}
 		
-		var document_window = window.open('newDocument?bucketName=${bucketName}','팝업스','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		var document_window = window.open('newDocument?bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업스','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
 	}
 	
 	function bucketChange(){

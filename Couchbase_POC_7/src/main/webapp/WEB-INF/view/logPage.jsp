@@ -13,12 +13,17 @@
 	// document.getElementById("logData").value
 	function logChange(name){
 		let logName = name.value;
+		
 		console.log(logName);
 		
-		if(logName == 'views')
-			document.getElementById("logData").value = `"${logList[0].views}"`;
-		else if(logName == 'query')
-			document.getElementById("logData").value = `"${logList[0].query}"`;
+		if(logName == 'views'){
+			$('#viewLog').attr('style', "display:none;");
+			$('#queryLog').attr('style', "display:inline;");
+		}
+		else if(logName == 'query'){
+			$('#viewLog').attr('style', "display:inline;");
+			$('#queryLog').attr('style', "display:none;");
+		}
 	}
 	
 </script>
@@ -41,9 +46,18 @@
 						<input type="radio" name="sdkJobType" value="query" onclick="logChange(this)" />
 						<label>Query</label>
 					</div><br>
-					<textarea cols="100" rows="30" readonly id=logData>
+
+<%-- 너무 느리고 쓸모없는 정보라 주석처리
+ 
+					<textarea cols="100" rows="30" readonly id=viewLog>
 						${logList[0].views }
 					</textarea>
+					<textarea cols="100" rows="30" readonly id=queryLog style=display:none;>
+						${logList[0].query }
+					</textarea>
+
+ --%>
+
 			</div>
 		</div>
 	</div>

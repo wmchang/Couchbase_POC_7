@@ -29,6 +29,7 @@ import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.BucketExistsException;
 import com.couchbase.client.core.error.BucketNotFoundException;
+import com.couchbase.client.core.error.DatasetNotFoundException;
 import com.couchbase.client.core.error.DocumentExistsException;
 import com.couchbase.client.core.error.IndexExistsException;
 import com.couchbase.client.core.error.IndexFailureException;
@@ -37,15 +38,14 @@ import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.ClusterOptions;
+import com.couchbase.client.java.analytics.AnalyticsResult;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.java.env.ClusterEnvironment.Builder;
 import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.GetResult;
-import com.couchbase.client.java.kv.MutationResult;
 import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import com.couchbase.client.java.manager.bucket.BucketType;
-import com.couchbase.client.java.manager.bucket.DropBucketOptions;
 import com.couchbase.client.java.manager.collection.CollectionSpec;
 import com.couchbase.client.java.manager.collection.ScopeSpec;
 import com.couchbase.client.java.query.QueryResult;
@@ -486,7 +486,6 @@ public class CouchbaseService {
 
 		cluster.disconnect();
 		cluster = Cluster.connect(dto.getHostname(), ClusterOptions.clusterOptions(dto.getUsername(), dto.getPassword()).environment(env));
-		cluster.buckets().getBucket(dto.getBucketName());
 		bucket = cluster.bucket(dto.getBucketName());		
 		
 		return "삭제되었습니다.";
@@ -538,7 +537,7 @@ public class CouchbaseService {
 	// Document
 	public Object getDocumentList(Map<String,Object> requestMap){
 		
-		try {
+		
 			if(bucket == null)
 				return null;
 			 // select meta(t).id from `test` as t limit 30;
@@ -553,7 +552,8 @@ public class CouchbaseService {
 			String scopeName = (String) requestMap.get("scopeName");
 			String collectionName = (String) requestMap.get("collectionName");
 			
-			
+			try {
+				
 			 StringBuilder statement = new StringBuilder();
 			 
 			 if(limit.length() < 0)
@@ -595,10 +595,18 @@ public class CouchbaseService {
 		catch(PlanningFailureException e) {
 			 List<Object> list = new ArrayList<Object>();
 			 Map<Object, Object> resultMap = new HashMap<Object, Object>();
-
+			 
 			 resultMap.put("id","emptyDocumentList");
-			 resultMap.put("content",  "문서가 존재하지 않습니다." );
+			 
+			 if(e.toString().contains("No index available on keyspace")) 
+				 resultMap.put("content",  "인덱스가 존재하지 않습니다. 인덱스를 생성해주세요.\n"
+				 		+ "가이드: Create Primary Index "+bucketName+"_"+collectionName+" on `"+bucketName+"`."+scopeName+"."+collectionName );
+			 else
+				 resultMap.put("content",  "문서가 존재하지 않습니다." );
+			 
 			 list.add(resultMap);
+			 
+			 System.out.println(resultMap.toString());
 			
 			return list;
 		}
@@ -608,12 +616,12 @@ public class CouchbaseService {
 
 			 resultMap.put("id","emptyDocumentList");
 			 
-			 if(e.toString().equals("not supported memcached")) {
+			 if(e.toString().contains("not supported memcached")) 
 				 resultMap.put("content", "Memcached Bucket은 조회가 불가능합니다." );
-			 }else {
+			 else 
 				 resultMap.put("content",  "문서가 존재하지 않습니다." );
 
-			 }
+			 
 			 list.add(resultMap);
 			 
 			return list;
@@ -633,6 +641,8 @@ public class CouchbaseService {
 		String bucketName = request.getParameter("bucketName");
 		String documentId = request.getParameter("documentId");
 		String documentText = request.getParameter("documentText");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
 		
 		if(bucketName == null)
 			bucketName = bucket.name();
@@ -643,9 +653,8 @@ public class CouchbaseService {
 		
 		String jsonStr = obj.toString();
 		JsonObject content = JsonObject.fromJson(jsonStr);
-
 			
-		cluster.bucket(bucketName).defaultCollection().insert(documentId, content);
+		cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(documentId, content);
 			
 		}catch(DocumentExistsException e) {
 			return "동일한 ID 의 Document가 존재합니다.";
@@ -661,6 +670,9 @@ public class CouchbaseService {
 		
 		String documentId = request.getParameter("documentId");
 		String documentText = request.getParameter("documentText");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
+		
 		
 		JSONObject obj = (JSONObject) parser.parse(documentText);
 		String jsonStr = obj.toString();
@@ -673,32 +685,20 @@ public class CouchbaseService {
 		else
 			bucketName = request.getParameter("bucketName");
 		
-		cluster.bucket(bucketName).defaultCollection().upsert(documentId, content);
+		cluster.bucket(bucketName).scope(scopeName).collection(collectionName).upsert(documentId, content);
 		
 		return "문서 '"+documentId + "' 가 정상적으로 변경되었습니다.";
 	}
 	
 
-	public Object getDocumentDetails(String documentId,String bucketName) {
+	public Object getDocumentDetails(HttpServletRequest request) {
 
-		StringBuilder statement = new StringBuilder();
-		String nowBucketName;
-
-		// select * from `test` as t where meta(t).id ="docId";
+		String bucketName = request.getParameter("bucketName");
+		String documentId = request.getParameter("documentId");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
 		
-		if(bucketName==null || bucketName=="")
-			nowBucketName=bucket.name();
-		else
-			nowBucketName = bucketName;
-
-		statement.append("select * from `");
-		statement.append(nowBucketName);
-		statement.append("` as t where meta(t).id =\"");
-		statement.append(documentId + "\"");
-		
-		System.out.println(statement);
-		
-		GetResult result = cluster.bucket(bucketName).defaultCollection().get(documentId);
+		GetResult result = cluster.bucket(bucketName).scope(scopeName).collection(collectionName).get(documentId);
 		
 		String documentDetails = null;
 		try {
@@ -712,11 +712,21 @@ public class CouchbaseService {
 		return documentDetails;
 	}
 	
-
-	public Object dropDocument(String bucketName,String documentId) {
+ 
+	public Object dropDocument(HttpServletRequest request) {
 		
-		MutationResult result = cluster.bucket(bucketName).defaultCollection().remove(documentId);
-		 
+		String bucketName = request.getParameter("bucketName");
+		String documentId = request.getParameter("documentId");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
+		
+		try {
+			cluster.bucket(bucketName).scope(scopeName).collection(collectionName).remove(documentId);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return "비정상적인 실행입니다.";
+		}
 		return "문서가 정상적으로 삭제되었습니다.";
 	}
 	
@@ -795,17 +805,21 @@ public class CouchbaseService {
 	}
 
 	public Object getFTSResult(HttpServletRequest request) {
-		
-		String indexName = request.getParameter("indexName");
-		String searchText = request.getParameter("searchText");
-		
-		MatchQuery query = SearchQuery.match(searchText);
-		
-		SearchResult result = cluster.searchQuery(indexName, query, SearchOptions.searchOptions().limit(100));
 		List<Object> list = new ArrayList<Object>();
-		
-		for(SearchRow row : result.rows()) {
-			list.add(row.id());
+
+		try {
+			String indexName = request.getParameter("indexName");
+			String searchText = request.getParameter("searchText");
+			
+			MatchQuery query = SearchQuery.match(searchText);
+			
+			SearchResult result = cluster.searchQuery(indexName, query, SearchOptions.searchOptions().limit(100));
+			
+			for(SearchRow row : result.rows()) {
+				list.add(row.id());
+			}
+		}catch(IllegalArgumentException e) {
+			list.add("잘못된 접근입니다,");
 		}
 		
 		return list;
@@ -1018,7 +1032,7 @@ public class CouchbaseService {
 
 	// Log
 	
-	public List<Object> getLogs() {
+	public List<Map<String,Object>> getLogs() {
 		
 		// curl -v -X GET -u Administrator:admin123 http://localhost:8091/sasl_logs/[logs-name]
 		
@@ -1040,10 +1054,11 @@ public class CouchbaseService {
 						"query"
 						
 						};
+//      너무 느리고 쓸모없는 정보라 주석처리		
+//		List<Map<String,Object>> logList = serviceUtil.logMaker(command, logs);
 		
-		List<Object> logList = serviceUtil.logMaker(command, logs);
-		
-		return logList;
+//		return logList;
+		return null;
 	}
 
 	// Settings
@@ -1356,5 +1371,32 @@ public class CouchbaseService {
 		return "설정이 완료되었습니다.";
 	}
 	
+	
+	// Analytics
+	public Object analyticsQuery(HttpServletRequest request) {
+		
+		
+		if(cluster == null) {
+			return "서버와 연결해주십시오.";
+		}
+		
+		Map<String,Object> resultMap= new HashMap<String,Object>();
+		String statement = request.getParameter("queryInput");
+		
+		try {
+			AnalyticsResult result = cluster.analyticsQuery(statement);
+			resultMap.put("allRows", result.rowsAsObject().toString());
+				
+		}
+		catch(DatasetNotFoundException e) {
+			return "dataSet이 존재하지 않습니다.";
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return e.toString();
+		}
+		
+		return resultMap;
+	}
 }
 

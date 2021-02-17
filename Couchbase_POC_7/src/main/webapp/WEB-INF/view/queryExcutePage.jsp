@@ -68,7 +68,8 @@
 	        <div class="mx-auto col-lg-5"><br>
 	        <h4> &nbsp; 쿼리 작업</h4><br>
         	<form id="queryForm" name="queryForm">
-				<textarea id="queryInput" name="queryInput" placeholder="쿼리문을 작성해주세요." style="width:100%; height:100%; font-size:1.1rem;" onkeyup=resize(this)></textarea>
+				<textarea id="queryInput" name="queryInput" placeholder="쿼리문을 작성해주세요." 
+				 			style="width:100%; height:100%; font-size:1.1rem;" onkeyup=resize(this)></textarea>
 					<button type="button" class="btn btn-primary float-right" onclick="queryExcute();">실행</button>
 					<button type="button" class="btn btn-primary float-right" onclick="reset();" style="margin-right:15px;">값 초기화</button>
 			</form>

@@ -91,7 +91,7 @@ public class ServiceController {
 	@RequestMapping(value="/dropDocument", method=RequestMethod.POST) 
 	@ResponseBody
 	public Object dropDocument(HttpServletRequest request) throws Exception { 
-		return couchbaseService.dropDocument(request.getParameter("bucketName"), request.getParameter("documentId")); 
+		return couchbaseService.dropDocument(request); 
 	}
 	
 	// Query
@@ -143,4 +143,13 @@ public class ServiceController {
 		
 		return couchbaseService.setQuerySettings(querySettings);
 	}
+	
+	@RequestMapping(value="/analyticsQuery", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object analyticsQuery(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.analyticsQuery(request);
+	}
+	
+	
 }	
