@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.couchbase.client.core.error.AuthenticationFailureException;
 import com.couchbase.client.core.error.CouchbaseException;
+import com.couchbase.client.core.error.IndexFailureException;
 import com.couchbase.client.core.error.ParsingFailureException;
 
 @RestControllerAdvice
@@ -70,4 +71,19 @@ public class CouchExceptionHandler {
 		
 		return null;
 	}
+	
+	@ExceptionHandler(IndexFailureException.class)
+	public Object IndexFailureCatch(IndexFailureException e) {
+		
+		System.out.println(e.toString());
+		
+		if(e.toString().contains("already exists"))
+			return "[ERROR]: 이미 존재합니다.";
+		
+		System.out.println(e.getLocalizedMessage());
+
+		return "ERROR";
+	}
+	
+	
 }

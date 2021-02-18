@@ -371,8 +371,6 @@ public class CouchbaseService {
 		
 		if(dto == null)
 			return null;
-		else if(bucket == null)
-			return null;
 		
 		StringBuilder command = new StringBuilder();
 		command.append("curl -u ");
@@ -426,8 +424,6 @@ public class CouchbaseService {
 		
 		if(dto == null)
 			return null;
-		else if(bucket == null)
-			return null;
 		
 		Map<String,BucketSettings> map = cluster.buckets().getAllBuckets();
 		List<String> bucketList = new ArrayList<String>();
@@ -474,28 +470,56 @@ public class CouchbaseService {
 	
 	public String dropBucket(HttpServletRequest request) {
 		
+		try {
 		
-		BucketManager manager = cluster.buckets();
-		
-		if(bucket.name().equals(request.getParameter("bucketName"))) {
-			return "연결되어있는 버킷은 제거할 수 없습니다."; 
+			BucketManager manager = cluster.buckets();
+			
+			if(bucket.name().equals(request.getParameter("bucketName"))) {
+				return "연결되어있는 버킷은 제거할 수 없습니다."; 
+			}
+			manager.dropBucket(request.getParameter("bucketName"));
+	
+			cluster.disconnect();
+			cluster = Cluster.connect(dto.getHostname(), ClusterOptions.clusterOptions(dto.getUsername(), dto.getPassword()).environment(env));
+			bucket = cluster.bucket(dto.getBucketName());		
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return "오류";
 		}
 		
-		
-		manager.dropBucket(request.getParameter("bucketName"));
-
-		cluster.disconnect();
-		cluster = Cluster.connect(dto.getHostname(), ClusterOptions.clusterOptions(dto.getUsername(), dto.getPassword()).environment(env));
-		bucket = cluster.bucket(dto.getBucketName());		
-		
 		return "삭제되었습니다.";
+	}
+	
+	public Object getAllScope(HttpServletRequest request) {
+		
+		if(dto == null)
+			return null;
+		
+		String bucketName = request.getParameter("bucketName");
+		
+		Map<String,Object> map = new HashMap<String,Object>();
+		Iterator<ScopeSpec> scopeI = cluster.bucket(bucketName).collections().getAllScopes().iterator();
+		
+		while(scopeI.hasNext()) {
+			List<String> list = new ArrayList<String>();
+
+			ScopeSpec scope = scopeI.next();
+			Iterator<CollectionSpec> colI = scope.collections().iterator();
+			
+			while(colI.hasNext()) {
+				CollectionSpec col = colI.next();
+				list.add(col.name());
+			}
+			map.put(scope.name(), list);
+		}
+		
+		return map;
 	}
 	
 	public Map<String, Object> getScopeCollection(Map<String,Object> requestMap) {
 		
 		if(dto == null)
-			return null;
-		else if(bucket == null)
 			return null;
 		
 		String bucketName = (String) requestMap.get("bucketName");
@@ -515,13 +539,12 @@ public class CouchbaseService {
 		while(scopeI.hasNext()) {
 			
 			ScopeSpec scope = scopeI.next();
-			
-			Iterator<CollectionSpec> colI = scope.collections().iterator();
-			
 			scopeList.add(scope.name());
-			
+
+			Iterator<CollectionSpec> colI = scope.collections().iterator();
 			while(colI.hasNext()) {
 				CollectionSpec col = colI.next();
+				
 				if(col.scopeName().equals(scopeName)) {
 					collectionList.add(col.name());
 				}
@@ -531,17 +554,98 @@ public class CouchbaseService {
 		map.put("scopeList", scopeList);
 		map.put("collectionList", collectionList);
 		
+		
 		return map;
+	}
+	
+	public Object createScope(HttpServletRequest request) {
+		
+		String bucketName = request.getParameter("bucketName");
+		String scopeName = request.getParameter("scopeName");
+		
+		StringBuilder statement = new StringBuilder();
+
+		statement.append("Create Scope `");
+		statement.append(bucketName);
+		statement.append("`.");
+		statement.append(scopeName);
+		System.out.println(statement.toString());
+		
+		cluster.query(statement.toString());
+		
+		return scopeName+" Scope가 생성되었습니다.";
+	}
+	
+	public Object createCollection(HttpServletRequest request) {
+		
+		String bucketName = request.getParameter("bucketName");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
+		
+		StringBuilder statement = new StringBuilder();
+
+		statement.append("Create Collection `");
+		statement.append(bucketName);
+		statement.append("`.");
+		statement.append(scopeName);
+		statement.append(".");
+		statement.append(collectionName);
+		System.out.println(statement.toString());
+		
+		cluster.query(statement.toString());
+		
+
+		return collectionName+" Collection이 생성되었습니다.";
+	}
+	
+	public Object dropScope(HttpServletRequest request) {
+		
+		String bucketName = request.getParameter("bucketName");
+		String scopeName = request.getParameter("scopeName");
+		
+		StringBuilder statement = new StringBuilder();
+		
+		statement.append("Drop Scope `");
+		statement.append(bucketName);
+		statement.append("`.");
+		statement.append(scopeName);
+		System.out.println(statement.toString());
+		
+		cluster.query(statement.toString());
+		
+		
+		return scopeName+" Scope가 삭제되었습니다.";
+	}
+	
+	public Object dropCollection(HttpServletRequest request) {
+		
+		String bucketName = request.getParameter("bucketName");
+		String scopeName = request.getParameter("scopeName");
+		String collectionName = request.getParameter("collectionName");
+		
+		StringBuilder statement = new StringBuilder();
+		
+		statement.append("Drop Collection `");
+		statement.append(bucketName);
+		statement.append("`.");
+		statement.append(scopeName);
+		statement.append(".");
+		statement.append(collectionName);
+		System.out.println(statement.toString());
+		
+		cluster.query(statement.toString());
+		
+		
+		return collectionName+" Collection이 삭제되었습니다.";
 	}
 	
 	// Document
 	public Object getDocumentList(Map<String,Object> requestMap){
 		
-		
-			if(bucket == null)
+			if(cluster == null)
 				return null;
 			 // select meta(t).id from `test` as t limit 30;
-			
+
 			String limit;
 			if(requestMap.get("limit")==null)
 				limit = "30";
@@ -600,14 +704,12 @@ public class CouchbaseService {
 			 
 			 if(e.toString().contains("No index available on keyspace")) 
 				 resultMap.put("content",  "인덱스가 존재하지 않습니다. 인덱스를 생성해주세요.\n"
-				 		+ "가이드: Create Primary Index "+bucketName+"_"+collectionName+" on `"+bucketName+"`."+scopeName+"."+collectionName );
+				 		+ "추천: Create Primary Index "+bucketName+"_"+collectionName+" on `"+bucketName+"`."+scopeName+"."+collectionName );
 			 else
 				 resultMap.put("content",  "문서가 존재하지 않습니다." );
 			 
 			 list.add(resultMap);
 			 
-			 System.out.println(resultMap.toString());
-			
 			return list;
 		}
 		catch(IndexFailureException e) {
@@ -742,7 +844,10 @@ public class CouchbaseService {
 			
 			QueryResult result = cluster.query(queryInput);
 			
-			resultMap.put("allRows", result.rowsAsObject().toString());
+			if(result.rowsAsObject().toString().length()<0)
+				resultMap.put("allRows", "실행이 완료되었습니다.");
+			else
+				resultMap.put("allRows", result.rowsAsObject().toString());
 			
 			return resultMap;
 		}
@@ -757,7 +862,6 @@ public class CouchbaseService {
 	}
 
 	// FTS 
-
 	public Object getFTIList() {
 		
 		if(dto == null)
@@ -828,16 +932,15 @@ public class CouchbaseService {
 	// Making Random Data
 	
 	public Object makeRandomData(HttpServletRequest request) throws Exception {
-
-		int docSize = Integer.parseInt(request.getParameter("docSize"));
-		int docIdSize = Integer.parseInt(request.getParameter("docIdSize"));
-		int docCount = Integer.parseInt(request.getParameter("docCount"));
-		int threadCount = Integer.parseInt(request.getParameter("threadCount"));
 		
-		if(bucket == null)
-			return "먼저 Bucket을 연결해주십시오.";
+		HashMap<String,Object> map = serviceUtil.getRequestToMap(request);
 		
-		Runnable couchTr = new CouchbaseThread(docSize, docCount, docIdSize, bucket);
+		int threadCount = Integer.parseInt((String)map.get("threadCount"));
+		
+		if(cluster == null)
+			return "서버를 연결해주십시오.";
+		
+		Runnable couchTr = new CouchbaseThread(map,cluster.bucket((String)map.get("bucketName")));
 		for (int i = 0; i < threadCount; i++) {
 		  
 			Thread t1 = new Thread(couchTr);
@@ -1371,7 +1474,6 @@ public class CouchbaseService {
 		return "설정이 완료되었습니다.";
 	}
 	
-	
 	// Analytics
 	public Object analyticsQuery(HttpServletRequest request) {
 		
@@ -1398,5 +1500,12 @@ public class CouchbaseService {
 		
 		return resultMap;
 	}
+
+	// Eventing
+	public Object eventingExecute() {
+		
+		return null;
+	}
+	
 }
 

@@ -1,21 +1,32 @@
 package com.poc.spring.service;
 
+import java.util.HashMap;
+
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.json.JsonObject;
 
 public class CouchbaseThread implements Runnable{
-	  int docSize;
+	int docSize;
     int docCount;
     int docIdSize;
+    String scopeName;
+    String collectionName;
     Bucket bucket;
     
-  public CouchbaseThread(int docSize,int docCount, int docIdSize, Bucket bucket) {
-  	this.docSize = docSize;
-  	this.docCount = docCount;
-  	this.docIdSize = docIdSize;
+    @Autowired
+    CouchbaseService couchbaseService;
+    
+  public CouchbaseThread(HashMap<String,Object> map, Bucket bucket) {
+	
+  	this.docSize = Integer.parseInt((String)map.get("docSize"));
+  	this.docCount = Integer.parseInt((String)map.get("docCount"));
+  	this.docIdSize = Integer.parseInt((String)map.get("docIdSize"));
   	this.bucket = bucket;
+  	this.scopeName = (String)map.get("scopeName");
+  	this.collectionName = (String)map.get("collectionName");
   	
   }
   
@@ -27,11 +38,13 @@ public class CouchbaseThread implements Runnable{
       			System.out.println("완료");
       		}
       		--docCount;
-  			bucket.defaultCollection().upsert(RandomStringUtils.randomAlphanumeric(docIdSize), JsonObject.create().put("a", RandomStringUtils.randomAlphanumeric(docSize)));
+      		bucket.scope(scopeName).collection(collectionName)
+      				.upsert(RandomStringUtils.randomAlphanumeric(docIdSize), JsonObject.create().put("a", RandomStringUtils.randomAlphanumeric(docSize)));
   			
       	}
       }catch(Exception e) {
-
+    	  e.printStackTrace();
+    	  System.out.println("오류");
       }
   }
 }

@@ -1,6 +1,13 @@
 
 
 
+
+
+let popupX = (window.screen.width/2)-(500/2);
+let popupY = (window.screen.height/2)-(500/2);
+let left = (screen.availWidth)-popupX; 
+
+
 	// radio 클릭 시 상태변화에 맞춰 같이 움직여야하는 값들 disable 화 시켜주는 메소드.
 	// id에 해당 radio랑 같은 id를 맞춰주면 된다.
 	function radioDisableChecking(chk){

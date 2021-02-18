@@ -34,6 +34,10 @@
 		});
 	}
 	
+	function getScopeCollection(chk){
+		window.open('scopePage?bucketName='+chk.id,'팝업','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+	}
+	
 	function dropBucketNow(chk) {
 		
 		
@@ -61,7 +65,7 @@
 	
 	<div class=container-fluid>
 		<div class=row>
-	        <div class="col-xl-7 borderDiv mx-auto"><br>
+	        <div class="col-xl-8 borderDiv mx-auto"><br>
 	        	<h4> &nbsp; 버킷 리스트</h4><br>
 				<div>
 					<c:if test="${empty bucketList}">
@@ -77,6 +81,7 @@
 							    <col width="30%" />
 							    <col width="10%" />
 							    <col width="12%" />
+							    <col width="12%" />
 							</colgroup>
 							<tr>
 								<th>버킷이름</th>
@@ -84,7 +89,8 @@
 								<th>문서 수</th>
 								<th>메모리 사용량</th>
 								<th>디스크 사용량</th>
-								<th></th>
+								<th>Scope</th>
+								<th>삭제</th>
 							</tr>
 					
 					
@@ -96,6 +102,7 @@
 								<td>${list.itemCount }</td>
 								<td>${list.quotaPercentUsed }% (${list.memUsed }MB / ${list.ram }MB)</td>
 								<td>${list.diskUsed }MB </td>
+								<td><a href="#" id=${list.name } onclick="getScopeCollection(this);">Scope</a> </td>
 								<td><button type="button" class="btn btn-warning float-right" id=${list.name } onclick="dropBucketNow(this);">제거</button> </td>
 								
 							</tr>

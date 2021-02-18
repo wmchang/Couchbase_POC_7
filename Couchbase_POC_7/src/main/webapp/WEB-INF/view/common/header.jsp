@@ -28,7 +28,7 @@
 			<a href="<%= request.getContextPath()%>/nodeManagePage"> 노드 </a>
 		</div>
 		<div class="menu">
-			<a href="<%= request.getContextPath()%>/bucketManagePage"> 버킷 </a>
+			<a href="<%= request.getContextPath()%>/bucket/bucketManagePage"> 버킷 </a>
 		</div>
 		<div class="menu">
 			<a href="<%= request.getContextPath()%>/documents/documentPage"> 문서 </a>
@@ -49,7 +49,7 @@
 			<a href="<%= request.getContextPath()%>/randomDataPage"> 랜덤 데이터 </a>
 		</div>
 		<div class="menu">
-			<a href="<%= request.getContextPath()%>/CsvOrFileUpsertPage"> 파일 업로드 </a>
+			<a href="<%= request.getContextPath()%>/fileImportPage"> 파일 업로드 </a>
 		</div>
 		<div class="menu">
 			<a href="<%= request.getContextPath()%>/logPage"> 로그 </a>

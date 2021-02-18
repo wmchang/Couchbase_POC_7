@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -16,12 +15,15 @@ import com.poc.spring.dto.CompactionDTO;
 import com.poc.spring.dto.SettingDTO;
 import com.poc.spring.dto.querySettingsDTO;
 import com.poc.spring.service.CouchbaseService;
+import com.poc.spring.util.ServiceUtils;
 
 @Controller
 public class ServiceController {
 	
 	@Autowired
 	CouchbaseService couchbaseService;
+	@Autowired
+	ServiceUtils serviceUtil;	
 	
 	// Connect
 	@RequestMapping(value="/conData", method=RequestMethod.POST) 
@@ -66,6 +68,30 @@ public class ServiceController {
 	@ResponseBody
 	public Object getScopeCollection(Map<String,Object> requestMap) throws Exception { 
 		return couchbaseService.getScopeCollection(requestMap); 
+	}
+	
+	@RequestMapping(value="/createScope", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object createScope(HttpServletRequest request) throws Exception { 
+		return couchbaseService.createScope(request); 
+	}
+	
+	@RequestMapping(value="/createCollection", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object createCollection(HttpServletRequest request) throws Exception { 
+		return couchbaseService.createCollection(request); 
+	}
+	
+	@RequestMapping(value="/dropScope", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object dropScope(HttpServletRequest request) throws Exception { 
+		return couchbaseService.dropScope(request); 
+	}
+	
+	@RequestMapping(value="/dropCollection", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object dropCollection(HttpServletRequest request) throws Exception { 
+		return couchbaseService.dropCollection(request); 
 	}
 	
 	// Create Primary Index

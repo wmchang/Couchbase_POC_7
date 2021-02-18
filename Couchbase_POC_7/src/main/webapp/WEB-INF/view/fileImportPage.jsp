@@ -37,6 +37,30 @@ function uploadFile() {
 	});
 }
 
+
+function bucketChange(){
+	if(document.getElementById("bucketName").value=='-Select Bucket-')
+		return;
+	
+	let bucketName = $('#bucketName').val();
+	let scopeName = $('#scopeName').val();
+	let collectionName = $('#collectionName').val();
+	
+	location.href="<%= request.getContextPath()%>/fileImportPage?bucketName="+bucketName+"&scopeName="+scopeName+"&collectionName="+collectionName;
+	
+	
+}
+
+function scopeOrCollectionChange(){
+	
+	let bucketName = $('#bucketName').val();
+	let scopeName = $('#scopeName').val();
+	let collectionName = $('#collectionName').val();
+	
+	location.href="<%= request.getContextPath()%>/fileImportPage?bucketName="+bucketName+"&scopeName="+scopeName+"&collectionName="+collectionName;
+	
+}
+
 </script>
 <body>
 	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -47,10 +71,44 @@ function uploadFile() {
 	
 	<div class=container>
 		<div class=row>
-			<div class="mx-auto col-sm-5"><br>
+			<div class="mx-auto col-lg-5"><br>
 	        <h4> &nbsp; CSV 혹은 JSON 파일 업로드 </h4><br>
-	        	<form id="fileUpload" name="fileUpload" enctype="multipart/form-data">
+	        
+	        	<c:if test="${empty bucketName}">
+						<h5> 서버를 연결해주세요.</h5>
+				</c:if>
 					
+				<c:if test="${not empty bucketName}">
+					
+	        	<form id="fileUpload" name="fileUpload" enctype="multipart/form-data">
+	        	
+        			<div>
+						<label ># Bucket</label><br>
+						<select name=bucketName onchange=bucketChange() id=bucketName>
+								<option value='-Select Bucket-'>-Select Bucket-</option>
+							<c:forEach items="${bucketList }" var="list">
+								<option value=${list } <c:if test="${list eq bucketName}">selected</c:if>>${list }</option>
+							</c:forEach>
+						</select>
+					</div>
+					<div>
+					<label ># Scope</label><br>
+					<select name=scopeName onchange=scopeOrCollectionChange() id=scopeName>
+						<c:forEach items="${scopeList }" var="list">
+							<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
+						</c:forEach>
+					</select>
+					</div>
+					
+					<div>
+					<label ># Collection</label><br>
+					<select name=collectionName onchange=scopeOrCollectionChange() id=collectionName>
+						<c:forEach items="${collectionList }" var="list">
+							<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
+						</c:forEach>
+					</select>
+					</div>
+					<br>
 		        	<div>
 						# 확장자 선택<br>
 						<input type="radio" name="fileExtension" value="csv" checked />
@@ -78,14 +136,8 @@ function uploadFile() {
 					</div>
 				</form>
 				<button type="submit" class="btn btn-primary float-right" onclick="uploadFile();">실행</button>
+				</c:if>
 	        </div>
-        
-        	<div class="mx-auto col-sm-5"><br>
-        		<h4> &nbsp; 작업 결과</h4><br>
-        		<textarea id="uploadResult" name="uploadResult" readonly
-					placeholder="작업을 실행해주세요." style="width:500px; height:500px;">
-				</textarea>
-        	</div>
 		</div>
 	</div>
 

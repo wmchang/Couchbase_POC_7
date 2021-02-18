@@ -26,8 +26,6 @@ public class PageController {
 	@Autowired
 	ServiceUtils serviceUtil;
 	
-	private static String yetBucketName = null;
-	
 	@RequestMapping("/")
 	public String index() { 
 		return "index"; 
@@ -44,10 +42,30 @@ public class PageController {
 		return "/nodeManagePage";
 	}
 	
-	@RequestMapping("/bucketManagePage")
+	@RequestMapping("/bucket/bucketManagePage")
 	public String bucketManagePage(Model model) {
 		model.addAttribute("bucketList", couchbaseService.getBucketListDetail());
-		return "/bucketManagePage";
+		return "/bucket/bucketManagePage";
+	}
+	
+	@RequestMapping("/bucket/scopePage")
+	public String scopePage(Model model,HttpServletRequest request) {
+		model.addAttribute("bucketName", request.getParameter("bucketName"));
+		model.addAttribute("scopeList", couchbaseService.getAllScope(request));
+		return "/bucket/scopePage";
+	}
+	
+	@RequestMapping("/bucket/addScopePage")
+	public String addScopePage(Model model,HttpServletRequest request) {
+		model.addAttribute("bucketName", request.getParameter("bucketName"));
+		return "/bucket/addScopePage";
+	}
+	
+	@RequestMapping("/bucket/addCollectionPage")
+	public String addCollectionPage(Model model,HttpServletRequest request) {
+		model.addAttribute("bucketName", request.getParameter("bucketName"));
+		model.addAttribute("scopeName", request.getParameter("scopeName"));
+		return "/bucket/addCollectionPage";
 	}
 	
 	@RequestMapping(value="/documents/documentPage") 
@@ -72,28 +90,22 @@ public class PageController {
 				collectionName = (String)requestMap.get("collectionName");
 			}
 			
-			if(!bucketName.equals(yetBucketName) && yetBucketName != null) { // BucketName이 변경되었을 때, Scope와 Collection 초기화
-				scopeName = "_default";
-				collectionName = "_default";
-				
-			}else {
-				Iterator<CollectionSpec> i = couchbaseService.cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
-				List<String> collectionList = new ArrayList<String>();
-				
-				while(i.hasNext()){
-					collectionList.add(i.next().name());
-				}
-				
-				if(!collectionList.contains(collectionName)) {
-					
-					System.out.println(collectionList);
-					if(collectionList.contains("_default")) 
-						collectionName = "_default";
-					else
-						collectionName = collectionList.get(0);
-				}
+			
+			Iterator<CollectionSpec> i = couchbaseService.cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
+			List<String> collectionList = new ArrayList<String>();
+			
+			while(i.hasNext()){
+				collectionList.add(i.next().name());
 			}
 			
+			if(!collectionList.contains(collectionName)) {
+				
+				if(collectionList.contains("_default")) 
+					collectionName = "_default";
+				else
+					collectionName = collectionList.get(0);
+			}
+						
 		}catch(NullPointerException e) { // bucket 과 연결되지 않았을 때
 			return "/documents/documentPage";
 		}
@@ -101,7 +113,10 @@ public class PageController {
 			scopeName = "_default";
 			collectionName = "_default";
 		}
-		yetBucketName = bucketName;
+		catch(IndexOutOfBoundsException e) {
+			scopeName = "_default";
+			collectionName = "_default";
+		}
 
 		model.addAttribute("bucketName",bucketName);
 		model.addAttribute("scopeName",scopeName);
@@ -185,13 +200,137 @@ public class PageController {
 	}
 	
 	@RequestMapping("/randomDataPage")
-	public String randomDataPage() {
-		return "randomDataPage";
+	public String randomDataPage(HttpServletRequest request, Model model) {
+		
+		Map<String,Object> requestMap = serviceUtil.getRequestToMap(request);
+		
+		String bucketName = null;
+		String scopeName = null;
+		String collectionName = null;
+		
+		try {
+			if(!requestMap.keySet().contains("bucketName")) { // request에 파라미터가 존재하지않을 때 ( 처음 documentPage에 진입 )
+				
+				bucketName = couchbaseService.bucket.name();
+				scopeName = "_default";
+				collectionName = "_default";
+				
+			}else {
+				bucketName = (String) requestMap.get("bucketName");
+				scopeName = (String)requestMap.get("scopeName");
+				collectionName = (String)requestMap.get("collectionName");
+			}
+			
+			
+			Iterator<CollectionSpec> i = couchbaseService.cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
+			List<String> collectionList = new ArrayList<String>();
+			
+			while(i.hasNext()){
+				collectionList.add(i.next().name());
+			}
+			
+			if(!collectionList.contains(collectionName)) {
+				
+				if(collectionList.contains("_default")) 
+					collectionName = "_default";
+				else
+					collectionName = collectionList.get(0);
+			}
+						
+		}catch(NullPointerException e) { // bucket 과 연결되지 않았을 때
+			return "/randomDataPage";
+		}
+		catch(ScopeNotFoundException e) {
+			scopeName = "_default";
+			collectionName = "_default";
+		}
+		catch(IndexOutOfBoundsException e) {
+			scopeName = "_default";
+			collectionName = "_default";
+		}
+
+		model.addAttribute("bucketName",bucketName);
+		model.addAttribute("scopeName",scopeName);
+		model.addAttribute("collectionName",collectionName);
+		
+		requestMap.put("bucketName", bucketName);
+		requestMap.put("scopeName", scopeName);
+		requestMap.put("collectionName", collectionName);
+		
+		model.addAttribute("bucketList", couchbaseService.getBucketList());
+		
+		Map<String, Object> resultMap = couchbaseService.getScopeCollection(requestMap);
+		model.addAttribute("scopeList", resultMap.get("scopeList"));
+		model.addAttribute("collectionList", resultMap.get("collectionList"));
+		
+		return "/randomDataPage";
 	}
 	
-	@RequestMapping("/CsvOrFileUpsertPage")
-	public String CsvOrFileUpsertPage() {
-		return "CsvOrFileUpsertPage";
+	@RequestMapping("/fileImportPage")
+	public String fileImportPage(HttpServletRequest request, Model model) {
+		
+		Map<String,Object> requestMap = serviceUtil.getRequestToMap(request);
+		
+		String bucketName = null;
+		String scopeName = null;
+		String collectionName = null;
+		
+		try {
+			if(!requestMap.keySet().contains("bucketName")) { // request에 파라미터가 존재하지않을 때 ( 처음 documentPage에 진입 )
+				
+				bucketName = couchbaseService.bucket.name();
+				scopeName = "_default";
+				collectionName = "_default";
+				
+			}else {
+				bucketName = (String) requestMap.get("bucketName");
+				scopeName = (String)requestMap.get("scopeName");
+				collectionName = (String)requestMap.get("collectionName");
+			}
+			
+			
+			Iterator<CollectionSpec> i = couchbaseService.cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
+			List<String> collectionList = new ArrayList<String>();
+			
+			while(i.hasNext()){
+				collectionList.add(i.next().name());
+			}
+			
+			if(!collectionList.contains(collectionName)) {
+				
+				if(collectionList.contains("_default")) 
+					collectionName = "_default";
+				else
+					collectionName = collectionList.get(0);
+			}
+						
+		}catch(NullPointerException e) { // bucket 과 연결되지 않았을 때
+			return "/fileImportPage";
+		}
+		catch(ScopeNotFoundException e) {
+			scopeName = "_default";
+			collectionName = "_default";
+		}
+		catch(IndexOutOfBoundsException e) {
+			scopeName = "_default";
+			collectionName = "_default";
+		}
+
+		model.addAttribute("bucketName",bucketName);
+		model.addAttribute("scopeName",scopeName);
+		model.addAttribute("collectionName",collectionName);
+		
+		requestMap.put("bucketName", bucketName);
+		requestMap.put("scopeName", scopeName);
+		requestMap.put("collectionName", collectionName);
+		
+		model.addAttribute("bucketList", couchbaseService.getBucketList());
+		
+		Map<String, Object> resultMap = couchbaseService.getScopeCollection(requestMap);
+		model.addAttribute("scopeList", resultMap.get("scopeList"));
+		model.addAttribute("collectionList", resultMap.get("collectionList"));
+		
+		return "/fileImportPage";
 	}
 	
 	@RequestMapping(value="/logPage") 
