@@ -189,9 +189,25 @@ public class PageController {
 		return "/fts/searchResultPage"; 
 	}
 	
-	@RequestMapping(value="/eventingPage") 
-	public String eventingPage() { 
-		return "eventingPage"; 
+	@RequestMapping(value="/event/eventingPage") 
+	public String eventingPage(Model model) { 
+		
+		Object obj = couchbaseService.getEventFunctionList();
+		
+		if(obj.getClass().getName().contains("String"))
+			model.addAttribute("message",obj);
+		else
+			model.addAttribute("functionList",obj);
+		
+		return "/event/eventingPage"; 
+	}
+	
+	@RequestMapping(value="/event/newEventFunction") 
+	public String newEventFunction(Model model) { 
+		
+		model.addAttribute("bucketList", couchbaseService.getBucketList());
+
+		return "/event/newEventFunction"; 
 	}
 	
 	@RequestMapping(value="/analyticsPage") 

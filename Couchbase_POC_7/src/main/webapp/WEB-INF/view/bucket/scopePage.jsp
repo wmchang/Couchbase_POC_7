@@ -26,11 +26,11 @@
 	}
 	
 	function addScope(bucketName){
-		window.open('addScopePage?bucketName='+bucketName,'뉴팝업','width=400, height=400, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no');
+		window.open('addScopePage?bucketName='+bucketName,'뉴팝업','width=400, height=400, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no');
 	}
 	
 	function addCollection(bucketName, scopeName){
-		window.open('addCollectionPage?bucketName='+bucketName+"&scopeName="+scopeName,'뉴팝업','width=400, height=400, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no');
+		window.open('addCollectionPage?bucketName='+bucketName+"&scopeName="+scopeName,'뉴팝업','width=400, height=400, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no');
 	}
 	
 	function dropScope(bucketName, scopeName){

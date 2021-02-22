@@ -43,17 +43,6 @@
 		
 		
 	}
-	
-	function scopeOrCollectionChange(){
-		
-		let bucketName = $('#bucketName').val();
-		let scopeName = $('#scopeName').val();
-		let collectionName = $('#collectionName').val();
-		
-		location.href="<%= request.getContextPath()%>/randomDataPage?bucketName="+bucketName+"&scopeName="+scopeName+"&collectionName="+collectionName;
-		
-	}
-	
 </script>
 <body>
 	<!-- header.jsp -->
@@ -85,7 +74,7 @@
 						</div>
 						<div>
 						<label ># Scope</label>
-						<select name=scopeName onchange=scopeOrCollectionChange() id=scopeName>
+						<select name=scopeName onchange=bucketChange() id=scopeName>
 							<c:forEach items="${scopeList }" var="list">
 								<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
 							</c:forEach>
@@ -94,7 +83,7 @@
 						
 						<div>
 						<label ># Collection</label>
-						<select name=collectionName onchange=scopeOrCollectionChange() id=collectionName>
+						<select name=collectionName id=collectionName>
 							<c:forEach items="${collectionList }" var="list">
 								<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
 							</c:forEach>

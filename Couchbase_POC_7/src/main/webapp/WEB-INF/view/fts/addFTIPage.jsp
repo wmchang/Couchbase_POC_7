@@ -64,26 +64,15 @@
 	
 function addAnalyzer(){
 		
-		var popupX = (window.screen.width/2)-(500/2);
-		var popupY = (window.screen.height/2)-(500/2);
-		var left = (screen.availWidth)-popupX;
-		
-		if( window.screenLeft < 0){
-			left += window.screen.width*-1;
-			}
-			else if ( window.screenLeft > window.screen.width ){
-			left += window.screen.width;
-		}
-		
-		var document_window = window.open('addAnalyzerPage','팝업스','width=500, height=530, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		var document_window = window.open('addAnalyzerPage','팝업스','width=500, height=530, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no')
 	}
 	
 	
 </script>
 <body>
 	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-	<!-- header.jsp -->
-	<c:import url="/WEB-INF/view/common/header.jsp">
+	<!-- no_header.jsp -->
+	<c:import url="/WEB-INF/view/common/no_header.jsp">
 	</c:import>
 	
 	

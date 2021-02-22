@@ -91,42 +91,42 @@
 			<div>
 				# Key-Value TimeOut <br>
 				<input type="text" name="kvTimeout" size="10" value=2500
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# View TimeOut <br>
 				<input type="text" name="viewTimeout" size="10" value=75000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Query TimeOut <br>
 				<input type="text" name="queryTimeout" size="10" value=75000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Search TimeOut <br>
 				<input type="text" name="searchTimeout" size="10" value=75000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Analytics TimeOut <br>
 				<input type="text" name="analyticsTimeout" size="10" value=75000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Connect TimeOut <br>
 				<input type="text" name="connectTimeout" size="10" value=5000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Disconnect TimeOut <br>
 				<input type="text" name="disconnectTimeout" size="10" value=25000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Connect TimeOut <br>
 				<input type="text" name="managementTimeout" size="10" value=75000
-					onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					onKeyup="_onlyNumber(this);" />
 			</div>
         </div>
         <div class="col-lg-3 borderDiv mx-auto"><br>
@@ -158,27 +158,27 @@
 			<div>
 				# TCP 유지 시간<span style=font-size:12px;>(ms)</span><br>
 				<input type="text" name="tcpKeepAliveTime"  id=tcpGroup 
-					value=60000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					value=60000 onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# KV Connection 수<br>
 				<input type="text" name="numKvConnections" 
-					value=1 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					value=1 onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# HTTP Connection 수<br>
 				<input type="text" name="maxHttpConnections" 
-					value=12 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					value=12 onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# HTTP Connection 유지 시간<span style=font-size:12px;>(ms)</span><br>
 				<input type="text" name="idleHttpConnectionTimeout" 
-					value=30000 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					value=30000 onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# Config 조사 시간 간격<span style=font-size:12px;>(ms)</span><br>
 				<input type="text" name="configPollInterval" 
-					value=2500 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					value=2500 onKeyup="_onlyNumber(this);" />
 			</div>
 			<div>
 				# 해당 서비스 트래픽 캡처 <br>
@@ -235,7 +235,7 @@
 			<div>
 				# 압축시킬 문서 최소 사이즈<span style=font-size:12px;>(byte)</span><br>
 				<input type="text" name="compressionMinSize"   id=compressionGroup
-					value=32 onKeyup="this.value=this.value.replace(/[^0-9]/g,'');" />
+					value=32 onKeyup="_onlyNumber(this);" />
 			</div>
 			
 			<div>

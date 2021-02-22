@@ -12,19 +12,11 @@
 	function getFTS(indexName, bucketName, st) {
 		
 		if (window.event.keyCode == 13) {
-			var popupX = (window.screen.width/2)-(500/2);
-			var popupY = (window.screen.height/2)-(500/2);
-			var left = (screen.availWidth)-popupX;
-			
-			if( window.screenLeft < 0)
-				left += window.screen.width*-1;
-			else if ( window.screenLeft > window.screen.width )
-				left += window.screen.width;
 			
 			let searchText = st.value;
 			let windowText = 'searchResultPage?indexName='+indexName+'&bucketName='+bucketName+'&searchText='+searchText;
 			
-			var document_window = window.open(windowText,'팝업스','width=550, height=580, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no');
+			var document_window = window.open(windowText,'팝업스','width=550, height=580, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no');
 	   }
 	}
 
@@ -60,7 +52,7 @@
 								<tr>
 									<td style=width:33%;>${list.bucket }</td>
 									<td style=width:33%;>${list.name }</td>
-									<td style=width:33%;><input type=text class=doc style=width:150px; id=bucketName name="bucketName" onkeyup="getFTS('${list.name}','${list.bucket }',this)"></td>
+									<td style=width:33%;><input type=text class=doc style=width:150px; id=searchText name="searchText" onkeyup="getFTS('${list.name}','${list.bucket }',this)"></td>
 								</tr>
 							</c:forEach>
 						</table>

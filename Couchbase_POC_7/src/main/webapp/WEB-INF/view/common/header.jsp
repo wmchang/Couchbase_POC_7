@@ -40,7 +40,7 @@
 			<a href="<%= request.getContextPath()%>/fts/ftsPage" > FTS </a>
 		</div>
 		<div class="menu">
-			<a href="<%= request.getContextPath()%>/eventingPage" > 이벤트 </a>
+			<a href="<%= request.getContextPath()%>/event/eventingPage" > 이벤트 </a>
 		</div>
 		<div class="menu">
 			<a href="<%= request.getContextPath()%>/analyticsPage" > 분석 </a>

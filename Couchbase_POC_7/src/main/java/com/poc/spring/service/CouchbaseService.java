@@ -517,6 +517,37 @@ public class CouchbaseService {
 		return map;
 	}
 	
+	public Object getScope(HttpServletRequest request) {
+		
+		String bucketName = request.getParameter("bucketName");
+		
+		Iterator<ScopeSpec> i = cluster.bucket(bucketName).collections().getAllScopes().iterator();
+		List<String> scopeList = new ArrayList<String>();
+		
+		while(i.hasNext()) {
+			
+			scopeList.add(i.next().name());
+		}
+		
+		return scopeList;
+	}
+	
+	public Object getCollection(HttpServletRequest request) {
+		
+		String bucketName = request.getParameter("bucketName");
+		String scopeName = request.getParameter("scopeName");
+		
+		Iterator<CollectionSpec> i = cluster.bucket(bucketName).collections().getScope(scopeName).collections().iterator();
+		List<String> collectionList = new ArrayList<String>();
+		
+		while(i.hasNext()) {
+			
+			collectionList.add(i.next().name());
+		}
+		
+		return collectionList;
+	}
+	
 	public Map<String, Object> getScopeCollection(Map<String,Object> requestMap) {
 		
 		if(dto == null)
@@ -703,7 +734,7 @@ public class CouchbaseService {
 			 resultMap.put("id","emptyDocumentList");
 			 
 			 if(e.toString().contains("No index available on keyspace")) 
-				 resultMap.put("content",  "인덱스가 존재하지 않습니다. 인덱스를 생성해주세요.\n"
+				 resultMap.put("content",  "인덱스가 존재하지 않습니다. 인덱스를 생성해주세요.\r\n"
 				 		+ "추천: Create Primary Index "+bucketName+"_"+collectionName+" on `"+bucketName+"`."+scopeName+"."+collectionName );
 			 else
 				 resultMap.put("content",  "문서가 존재하지 않습니다." );
@@ -735,6 +766,7 @@ public class CouchbaseService {
 			return null;
 		}
 		
+			
 	}
 
 
@@ -788,7 +820,7 @@ public class CouchbaseService {
 			bucketName = request.getParameter("bucketName");
 		
 		cluster.bucket(bucketName).scope(scopeName).collection(collectionName).upsert(documentId, content);
-		
+			
 		return "문서 '"+documentId + "' 가 정상적으로 변경되었습니다.";
 	}
 	
@@ -800,16 +832,34 @@ public class CouchbaseService {
 		String scopeName = request.getParameter("scopeName");
 		String collectionName = request.getParameter("collectionName");
 		
-		GetResult result = cluster.bucket(bucketName).scope(scopeName).collection(collectionName).get(documentId);
-		
 		String documentDetails = null;
+		GetResult result = null;
+
 		try {
-			JSONObject a = (JSONObject) parser.parse(result.contentAsObject().toString());
-			documentDetails = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(a);
+			
+			if(scopeName==null) {
+				String statement = "select * from `" + bucketName + "` t where meta().id = \'"+documentId+"'";
+				QueryResult queryResult = cluster.query(statement);
+				
+				JsonObject json = (JsonObject) queryResult.rowsAsObject().get(0).get("t");
+				
+				System.out.println(json);
+				/// jsonObject >>> JSONObject
+				
+				documentDetails = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+				
+			}else {
+				result = cluster.bucket(bucketName).scope(scopeName).collection(collectionName).get(documentId);
+				JSONObject json = (JSONObject) parser.parse(result.contentAsObject().toString());
+				
+				documentDetails = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		System.out.println(documentDetails);
 		
 		return documentDetails;
 	}
@@ -903,8 +953,6 @@ public class CouchbaseService {
 			e.printStackTrace();
 		}
 		
-		
-		
 		return list;
 	}
 
@@ -917,7 +965,7 @@ public class CouchbaseService {
 			
 			MatchQuery query = SearchQuery.match(searchText);
 			
-			SearchResult result = cluster.searchQuery(indexName, query, SearchOptions.searchOptions().limit(100));
+			SearchResult result = cluster.searchQuery(indexName, query, SearchOptions.searchOptions().limit(10000));
 			
 			for(SearchRow row : result.rows()) {
 				list.add(row.id());
@@ -1004,6 +1052,9 @@ public class CouchbaseService {
 		String importFilePath = "";						// 파일 경로 + 파일명
 		String docID = mRequest.getParameter("docId");	// docID
 		String cbPath = mRequest.getParameter("cbPath");
+		String bucketName = mRequest.getParameter("bucketName");
+		String scopeName = mRequest.getParameter("scopeName");
+		String collectionName = mRequest.getParameter("collectionName");
 		String columnOfExcel = mRequest.getParameter("columnOfExcel");
 		String fileExtension = mRequest.getParameter("fileExtension");
 		
@@ -1053,7 +1104,11 @@ public class CouchbaseService {
 				csvCommand.append(" -p ");
 				csvCommand.append(dto.getPassword());
 				csvCommand.append(" -b ");
-				csvCommand.append(dto.getBucketName());
+				csvCommand.append(bucketName);
+				csvCommand.append(" --scope-collection-exp ");
+				csvCommand.append(scopeName);
+				csvCommand.append(".");
+				csvCommand.append(collectionName);
 				csvCommand.append(" -d file://");
 				csvCommand.append(importFilePath);
 				csvCommand.append(" -g ");
@@ -1064,6 +1119,7 @@ public class CouchbaseService {
 				}else
 					csvCommand.append(docID);
 				csvCommand.append(" -t 2 ");
+				System.out.println(csvCommand);
 				
 				String curlResult = serviceUtil.curlExcute(csvCommand.toString()).get("result").toString();
 				
@@ -1081,7 +1137,11 @@ public class CouchbaseService {
 				jsonCommand.append(" -p ");
 				jsonCommand.append(dto.getPassword());
 				jsonCommand.append(" -b ");
-				jsonCommand.append(dto.getBucketName());
+				jsonCommand.append(bucketName);
+				jsonCommand.append(" --scope-collection-exp ");
+				jsonCommand.append(scopeName);
+				jsonCommand.append(".");
+				jsonCommand.append(collectionName);
 				jsonCommand.append(" -d file://");
 				jsonCommand.append(importFilePath);
 				jsonCommand.append(" -f lines -g ");
@@ -1092,6 +1152,7 @@ public class CouchbaseService {
 				}else
 					jsonCommand.append(docID);
 				jsonCommand.append(" -t 2 ");
+				System.out.println(jsonCommand);
 				
 				String curlResult = serviceUtil.curlExcute(jsonCommand.toString()).get("result").toString();
 				
@@ -1109,7 +1170,11 @@ public class CouchbaseService {
 				jsonCommand.append(" -p ");
 				jsonCommand.append(dto.getPassword());
 				jsonCommand.append(" -b ");
-				jsonCommand.append(dto.getBucketName());
+				jsonCommand.append(bucketName);
+				jsonCommand.append(" --scope-collection-exp ");
+				jsonCommand.append(scopeName);
+				jsonCommand.append(".");
+				jsonCommand.append(collectionName);
 				jsonCommand.append(" -d file://");
 				jsonCommand.append(importFilePath);
 				jsonCommand.append(" -f list -g ");
@@ -1120,6 +1185,7 @@ public class CouchbaseService {
 				}else
 					jsonCommand.append(docID);
 				jsonCommand.append(" -t 2 ");
+				System.out.println(jsonCommand);
 				
 				String curlResult = serviceUtil.curlExcute(jsonCommand.toString()).get("result").toString();
 				
@@ -1502,10 +1568,103 @@ public class CouchbaseService {
 	}
 
 	// Eventing
-	public Object eventingExecute() {
+	public Object getEventFunctionList() {
+		
+		if(dto == null)
+			return "서버를 연결해주세요.";
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X GET http://");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append("@");
+		command.append(dto.getHostname());
+		command.append(":8096/api/v1/functions");
+		
+		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
+		
+		try {
+			JSONArray jsonArray = (JSONArray) parser.parse(result);
+			List<Object> list = new ArrayList<Object>();
+			
+			for(int i=0; i<jsonArray.size();i++) {
+				JSONObject json = (JSONObject)jsonArray.get(i);
+				Map<String,Object> resultMap = new HashMap<String,Object>();
+
+				resultMap.put("functionName", (String)json.get("appname")); // functionName
+				resultMap.put("functionCode", (String)json.get("appCode")); // functionName
+				resultMap.put("bucketInfo", (JSONObject) json.get("depcfg")); // functionName
+				resultMap.put("settings", (JSONObject) json.get("settings")); // functionName
+				
+				list.add(resultMap);
+			}
+			
+			return list;
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		return "ERROR";
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Object createEventFunction(HttpServletRequest request) {
+		
+		Map<String,Object> map = serviceUtil.getRequestToMap(request);
+		
+		System.out.println((String)map.get("description"));
+		
+		// curl http://Administrator:admin123@localhost:8096/api/v1/functions/testFunction
+		
+		StringBuffer getSampleStatment = new StringBuffer();
+		getSampleStatment.append("curl http://");
+		getSampleStatment.append(dto.getUsername());
+		getSampleStatment.append(":");
+		getSampleStatment.append(dto.getPassword());
+		getSampleStatment.append("@");
+		getSampleStatment.append(dto.getHostname());
+		getSampleStatment.append(":8096/api/v1/functions/testFunction");
+		System.out.println(getSampleStatment);
+		
+		String result = serviceUtil.curlExcute(getSampleStatment.toString()).get("result").toString();
+		
+		try {
+			JSONObject json = (JSONObject) parser.parse(result);
+			
+			JSONObject depcfg = (JSONObject)json.get("depcfg");
+			
+			// binding 한 Buckets List
+			JSONArray buckets = (JSONArray)depcfg.get("buckets");
+			
+			depcfg.put("source_bucket", (String)map.get("srcBucket"));
+			depcfg.put("source_scope", (String)map.get("srcBucketScope"));
+			depcfg.put("source_collection", (String)map.get("srcBucketScopeCollection") );
+			depcfg.put("metadata_bucket", (String)map.get("metaBucket"));
+			depcfg.put("metadata_scope", (String)map.get("metaBucketScope"));
+			depcfg.put("metadata_collection", (String)map.get("metaBucketScopeCollection") );
+			
+			json.put("appname", (String)map.get("functionName"));
+			json.put("description", (String)map.get("description"));
+			json.put("log_level", (String)map.get("logLevel"));
+			json.put("default_stream_boundary", (String)map.get("feedBoundary"));
+			json.put("dcp_stream_boundary", (String)map.get("feedBoundary"));
+			
+			
+			
+			System.out.println(json);
+			
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 		
 		return null;
 	}
-	
 }
 

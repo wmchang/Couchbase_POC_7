@@ -13,14 +13,17 @@
 <script src="<%= request.getContextPath()%>/static/js/head_function.js"></script>
 
 <body>
-<!-- RandBot 	
-<script SameSite="None; Secure" src="https://static.landbot.io/landbot-widget/landbot-widget-1.0.0.js"></script>
-<script>
-  var myLandbot = new LandbotLivechat({
-    index: 'https://chats.landbot.io/v2/H-732845-Q0420772Y6TURE5U/index.html',
-  });
-</script>
+ 
+ 
+<%--  	
 
- -->
+	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+	<!-- no_header.jsp -->
+	<c:import url="/WEB-INF/view/common/no_header.jsp">
+	</c:import> 
+	
+	--%>
+ 
+ 
  </body>
 </html>

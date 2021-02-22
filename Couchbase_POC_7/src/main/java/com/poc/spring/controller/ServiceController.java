@@ -64,6 +64,18 @@ public class ServiceController {
 		return couchbaseService.createBucket(request); 
 	}
 	
+	@RequestMapping(value="/getScope", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object getScope(HttpServletRequest request) throws Exception { 
+		return couchbaseService.getScope(request);
+	}
+	
+	@RequestMapping(value="/getCollection", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object getCollection(HttpServletRequest request) throws Exception { 
+		return couchbaseService.getCollection(request);
+	}
+	
 	@RequestMapping(value="/getScopeCollection", method=RequestMethod.POST) 
 	@ResponseBody
 	public Object getScopeCollection(Map<String,Object> requestMap) throws Exception { 
@@ -177,5 +189,10 @@ public class ServiceController {
 		return couchbaseService.analyticsQuery(request);
 	}
 	
-	
+	@RequestMapping(value="/createEventFunction", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object createEventFunction(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.createEventFunction(request);
+	}
 }	

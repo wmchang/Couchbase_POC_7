@@ -5,10 +5,10 @@
 
 <meta charset="EUC-KR">
 <title>Insert title here</title>
-<link rel="stylesheet" type="text/css" href="<%= request.getContextPath()%>/static/css/index.css">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- 합쳐지고 최소화된 최신 자바스크립트 -->
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script src="<%= request.getContextPath()%>/static/js/head_function.js"></script>
+	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+	<!-- no_header.jsp -->
+	<c:import url="/WEB-INF/view/common/no_header.jsp">
+	</c:import>
 
 
 <style>
@@ -38,9 +38,18 @@ textarea {
 			},
 			success : function(data) {
 				alert(data);
-				_checkClose(data,"변경");
+				if(data.includes("변경"))
+					window.close();
 			}
 		});
+	}
+	
+	function thisClose(){
+		window.close();
+	}
+	
+	function back(){
+		history.back();
 	}
 	
 	function closeEvent(){
@@ -70,7 +79,6 @@ textarea {
 </script>
 
 <body onunload="closeEvent();">
-	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 	<div style=text-align:center;margin-top:15px;>
 		<form id=documentForm name=documentForm>
@@ -82,7 +90,14 @@ textarea {
 		</form>
 	</div>
 	
-	<button class="btn btn-primary float-right" onclick="upsertDocument()" style=margin-right:15px;>저장</button>
-	<button class="btn btn-primary float-right" onclick="deleteDocument()" style=margin-right:10px;>삭제</button>
+	<c:if test="${scopeName ne null }">
+		<button class="btn btn-primary float-right" onclick="upsertDocument()" style=margin-right:15px;>저장</button>
+		<button class="btn btn-primary float-right" onclick="deleteDocument()" style=margin-right:10px;>삭제</button>
+	</c:if>
+	
+	<c:if test="${scopeName eq null }">
+		<button class="btn btn-primary float-right" onclick="thisClose()" style=margin-right:15px;>닫기</button>
+		<button class="btn btn-primary float-right" onclick="back()" style=margin-right:15px;>이전</button>
+	</c:if>
 </body>
 </html>

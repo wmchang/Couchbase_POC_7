@@ -35,7 +35,7 @@
 	}
 	
 	function getScopeCollection(chk){
-		window.open('scopePage?bucketName='+chk.id,'팝업','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		window.open('scopePage?bucketName='+chk.id,'팝업','width=550, height=570, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no')
 	}
 	
 	function dropBucketNow(chk) {

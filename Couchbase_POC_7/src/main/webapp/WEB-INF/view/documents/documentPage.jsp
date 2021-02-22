@@ -30,21 +30,12 @@
 
 	function openDocument(docId){
 		
-		// window.open('documentDetails?documentId=${list.id }','팝업','width=500, height=300, left=3500, top=300, menubar=no, status=no, toolbar=no');
-		
-		if( window.screenLeft < 0){
-			left += window.screen.width*-1;
-			}
-			else if ( window.screenLeft > window.screen.width ){
-			left += window.screen.width;
-		}
-		
-		var document_window = window.open('documentDetails?documentId='+docId+'&bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		var document_window = window.open('documentDetails?documentId='+docId+'&bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업','width=550, height=570, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no')
 	}
 	
 	function newDocument(){
 		
-		var document_window = window.open('newDocument?bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업스','width=550, height=570, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		var document_window = window.open('newDocument?bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업스','width=550, height=570, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no')
 	}
 	
 	function bucketChange(){

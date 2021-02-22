@@ -1,11 +1,8 @@
 
 
 
-
-
-let popupX = (window.screen.width/2)-(500/2);
-let popupY = (window.screen.height/2)-(500/2);
-let left = (screen.availWidth)-popupX; 
+let _top = (window.screen.height/2)-(300/2);
+let _left = (window.screen.width/2)-(300/2); 
 
 
 	// radio 클릭 시 상태변화에 맞춰 같이 움직여야하는 값들 disable 화 시켜주는 메소드.
@@ -65,8 +62,10 @@ let left = (screen.availWidth)-popupX;
 	}
 	
 	
-	// chk에 val값이 들어있으면 window.close()로 창 닫아주는 메소드
-	function _checkClose(chk,val){
-		if(chk.includes(val))
-			window.close();
+	// input text에 숫자만 넣어야할 때 사용하는 메소드.
+	// this를 매개변수로 주면된다.
+	function _onlyNumber(chk){
+		chk.value=chk.value.replace(/[^0-9]/g,'');
 	}
+	
+	

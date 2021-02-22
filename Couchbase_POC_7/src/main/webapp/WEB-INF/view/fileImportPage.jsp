@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=EUC-KR"
-	pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,23 +41,7 @@ function bucketChange(){
 	if(document.getElementById("bucketName").value=='-Select Bucket-')
 		return;
 	
-	let bucketName = $('#bucketName').val();
-	let scopeName = $('#scopeName').val();
-	let collectionName = $('#collectionName').val();
-	
-	location.href="<%= request.getContextPath()%>/fileImportPage?bucketName="+bucketName+"&scopeName="+scopeName+"&collectionName="+collectionName;
-	
-	
-}
-
-function scopeOrCollectionChange(){
-	
-	let bucketName = $('#bucketName').val();
-	let scopeName = $('#scopeName').val();
-	let collectionName = $('#collectionName').val();
-	
-	location.href="<%= request.getContextPath()%>/fileImportPage?bucketName="+bucketName+"&scopeName="+scopeName+"&collectionName="+collectionName;
-	
+	$('#fileUpload').submit();
 }
 
 </script>
@@ -80,7 +63,7 @@ function scopeOrCollectionChange(){
 					
 				<c:if test="${not empty bucketName}">
 					
-	        	<form id="fileUpload" name="fileUpload" enctype="multipart/form-data">
+	        	<form id="fileUpload" name="fileUpload" enctype="multipart/form-data" style=text-align:center; action="/fileImportPage">
 	        	
         			<div>
 						<label ># Bucket</label><br>
@@ -93,7 +76,7 @@ function scopeOrCollectionChange(){
 					</div>
 					<div>
 					<label ># Scope</label><br>
-					<select name=scopeName onchange=scopeOrCollectionChange() id=scopeName>
+					<select name=scopeName onchange=bucketChange() id=scopeName>
 						<c:forEach items="${scopeList }" var="list">
 							<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
 						</c:forEach>
@@ -102,7 +85,7 @@ function scopeOrCollectionChange(){
 					
 					<div>
 					<label ># Collection</label><br>
-					<select name=collectionName onchange=scopeOrCollectionChange() id=collectionName>
+					<select name=collectionName id=collectionName>
 						<c:forEach items="${collectionList }" var="list">
 							<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
 						</c:forEach>
@@ -124,18 +107,19 @@ function scopeOrCollectionChange(){
 						# 문서 아이디
 						(<input type="checkbox" name="columnOfExcel" value="true" checked ><span style=font-size:10px> 파일내 컬럼으로 지정 </span>)
 						<br>
-						<input type="text" id="docId" name="docId" required="required" />  
+						<input type="text" id="docId" name="docId" required="required" value="<%=(request.getParameter("docId")==null) ? "" : request.getParameter("docId") %>" />  
 					</div>
 					<div>
 						# cbimport 경로(Couchbase\Server\bin)<br>
-						<input type="text" name="cbPath"  required="required" />
+						<input type="text" name="cbPath"  required="required" value="<%=(request.getParameter("cbPath")==null) ? "" : request.getParameter("cbPath") %>" />
 					</div><br>
 					<div>
 						파일 경로 : <input id="fileName" name="fileName" type=file
 									accept=".csv, .json" required="required" >
 					</div>
+					<br>
+					<button type="button" class="btn btn-primary" onclick="uploadFile();">실행</button>
 				</form>
-				<button type="submit" class="btn btn-primary float-right" onclick="uploadFile();">실행</button>
 				</c:if>
 	        </div>
 		</div>

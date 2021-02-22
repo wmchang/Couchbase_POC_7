@@ -4,9 +4,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" type="text/css" href="<%= request.getContextPath()%>/static/css/index.css">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- 합쳐지고 최소화된 최신 자바스크립트 -->
-
+	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+	<!-- no_header.jsp -->
+	<c:import url="/WEB-INF/view/common/no_header.jsp">
+	</c:import>
 <title>Couchbase</title>
 </head>
 <script>
@@ -15,25 +16,13 @@
 		
 		// window.open('documentDetails?documentId=${list.id }','팝업스','width=500, height=300, left=3500, top=300, menubar=no, status=no, toolbar=no');
 		
-		var popupX = (window.screen.width/2)-(500/2);
-		var popupY = (window.screen.height/2)-(500/2);
-		var left = (screen.availWidth)-popupX;
-		
-		if( window.screenLeft < 0){
-			left += window.screen.width*-1;
-			}
-			else if ( window.screenLeft > window.screen.width ){
-			left += window.screen.width;
-		}
-		
-		window.open('/documents/documentDetails?documentId='+docId+'&bucketName=${bucketName}','팝업스','width=650, height=600, left='+left+', top='+popupY+', menubar=no, status=no, toolbar=no')
+		window.open('/documents/documentDetails?documentId='+docId+'&bucketName=${bucketName}','팝업스','width=650, height=600, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no')
 		
 	}
 </script>
 
 <body>
 	
-	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> 
 
 	<div class=container>
