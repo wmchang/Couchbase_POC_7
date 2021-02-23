@@ -1,6 +1,7 @@
 package com.poc.spring.service;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
@@ -1615,9 +1616,16 @@ public class CouchbaseService {
 		
 		Map<String,Object> map = serviceUtil.getRequestToMap(request);
 		
-		System.out.println((String)map.get("description"));
+		try {
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		// curl http://Administrator:admin123@localhost:8096/api/v1/functions/testFunction
+		
+		
+		// curl http://Administrator:admin123@localhost:8096/api/v1/functions/testFunction2
 		
 		StringBuffer getSampleStatment = new StringBuffer();
 		getSampleStatment.append("curl http://");
@@ -1626,7 +1634,7 @@ public class CouchbaseService {
 		getSampleStatment.append(dto.getPassword());
 		getSampleStatment.append("@");
 		getSampleStatment.append(dto.getHostname());
-		getSampleStatment.append(":8096/api/v1/functions/testFunction");
+		getSampleStatment.append(":8096/api/v1/functions/testFunction2");
 		System.out.println(getSampleStatment);
 		
 		String result = serviceUtil.curlExcute(getSampleStatment.toString()).get("result").toString();
@@ -1636,8 +1644,77 @@ public class CouchbaseService {
 			
 			JSONObject depcfg = (JSONObject)json.get("depcfg");
 			
-			// binding 한 Buckets List
-			JSONArray buckets = (JSONArray)depcfg.get("buckets");
+			JSONObject settings = (JSONObject)json.get("settings");
+			
+			if(depcfg.containsKey("buckets")) {
+				depcfg.remove("buckets");
+			}
+			if(depcfg.containsKey("curl")) {
+				depcfg.remove("curl");
+			}
+			
+			JSONArray bucketArray = new JSONArray();
+			JSONArray curlArray = new JSONArray();
+			
+			for(int i=0;i<Integer.parseInt((String)map.get("aliasLength"));i++) {
+				
+				String bindingType = (String)map.get("bindingType"+i);
+				JSONObject temp = new JSONObject();
+				
+				if(bindingType.contains("bucket")) {
+					
+					temp.put("alias", (String)map.get("alias"+i));
+					temp.put("bucket_name", (String)map.get("bucket"+i));
+					temp.put("scope_name", (String)map.get("bucket"+i+"Scope"));
+					temp.put("collection_name", (String)map.get("bucket"+i+"ScopeCollection"));
+					temp.put("access", (String)map.get("access"+i));
+					
+					bucketArray.add(temp);
+				}
+				else if(bindingType.contains("URL")) {
+					
+					temp.put("hostname", (String)map.get("url"+i));
+					temp.put("value", (String)map.get("alias"+i));
+					temp.put("auth_type", (String)map.get("authType"+i));
+					
+					if(temp.get("auth_type").equals("no-auth")) {
+						temp.put("username", "");
+						temp.put("password", "");
+						temp.put("bearerKey", "");
+					}
+					else if(temp.get("auth_type").equals("basic") || temp.get("auth_type").equals("digest")) {
+						temp.put("username", (String)map.get("username"+i));
+						temp.put("password", (String)map.get("password"+i));
+						temp.put("bearerKey", "");
+					}
+					else {
+						temp.put("username", "");
+						temp.put("password", "");
+						temp.put("bearer_key", (String)map.get("bearerKey"+i));
+					}
+					
+					if((String)map.get("allowCookies"+i) == null)
+						temp.put("allow_cookies", false);
+					else
+						temp.put("allow_cookies", Boolean.parseBoolean((String)map.get("allowCookies"+i)));
+					
+					if((String)map.get("validateSSLCertificate"+i) == null)
+						temp.put("validate_ssl_certificate", false);
+					else
+						temp.put("validate_ssl_certificate", Boolean.parseBoolean((String)map.get("validateSSLCertificate"+i)));
+					
+					curlArray.add(temp);
+				}
+			}
+			
+			if(!bucketArray.isEmpty()) {
+				
+				depcfg.put("buckets", bucketArray);
+			}
+			
+			if(!curlArray.isEmpty()) {
+				depcfg.put("curl", curlArray);
+			}
 			
 			depcfg.put("source_bucket", (String)map.get("srcBucket"));
 			depcfg.put("source_scope", (String)map.get("srcBucketScope"));
@@ -1647,24 +1724,60 @@ public class CouchbaseService {
 			depcfg.put("metadata_collection", (String)map.get("metaBucketScopeCollection") );
 			
 			json.put("appname", (String)map.get("functionName"));
-			json.put("description", (String)map.get("description"));
-			json.put("log_level", (String)map.get("logLevel"));
-			json.put("default_stream_boundary", (String)map.get("feedBoundary"));
-			json.put("dcp_stream_boundary", (String)map.get("feedBoundary"));
+			
+			settings.put("dcp_stream_boundary", (String)map.get("feedBoundary"));
+			settings.put("default_stream_boundary", (String)map.get("feedBoundary"));
+			settings.put("description", (String)map.get("description"));
+			settings.put("execution_timeout", Integer.parseInt((String)map.get("executionTimeout")));
+			settings.put("language_compatibility", (String)map.get("languageCompatibility"));
+			settings.put("log_level", (String)map.get("logLevel"));
+			settings.put("n1ql_consistency", (String)map.get("n1qlConsistency"));
+			settings.put("timerContextSize", Integer.parseInt((String)map.get("timerContextSize")));
+			settings.put("worker_count", Integer.parseInt((String)map.get("workers")));
+			
+			try {
+				System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			String path = serviceUtil.cmdExecute("cd")+"";
+			
+			FileWriter file = new FileWriter(path+"/"+(String)map.get("functionName")+".json");
+			file.write(json.toJSONString());
+			file.close();
 			
 			
+			// curl -XPOST -d @./testFunction3.json http://Administrator:password@localhost:8096/api/v1/functions/testFunction3
+			StringBuffer statement = new StringBuffer();
+			statement.append("curl -XPOST http://");
+			statement.append(dto.getUsername());
+			statement.append(":");
+			statement.append(dto.getPassword());
+			statement.append("@");
+			statement.append(dto.getHostname());
+			statement.append(":8096/api/v1/functions/");
+			statement.append((String)map.get("functionName"));
+			statement.append(" -d @./");
+			statement.append((String)map.get("functionName"));
+			statement.append(".json");
+			System.out.println(statement);
 			
-			System.out.println(json);
 			
-		} catch (ParseException e) {
+			// 실행시켜보기
+			String createResult = serviceUtil.curlExcute(statement.toString()).get("result").toString();
+
+			System.out.println(createResult);
+			
+			return createResult;
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
-		
+
 		return null;
 	}
+
 }
 

@@ -1,5 +1,8 @@
 package com.poc.spring.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -44,6 +47,31 @@ public class ServiceUtils {
 		}
 		
 		return resultMap;
+	}
+	
+	// CMD를 실행하는 메소드. 결과값을 Map의 key "result"로 반환함
+	public String cmdExecute(String command) {
+		
+        String line = null;
+
+		
+	    ProcessBuilder processBuilder = new ProcessBuilder();
+	    processBuilder.command("cmd.exe", "/c", command);
+	    try {
+			Process process = processBuilder.start();
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            while ((line = reader.readLine()) != null) {
+            	
+            	return line;
+            }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+	    return line;
 	}
 	
 	public String byteToMb(Object object) {
