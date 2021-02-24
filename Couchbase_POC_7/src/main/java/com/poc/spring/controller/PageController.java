@@ -210,6 +210,15 @@ public class PageController {
 		return "/event/newEventFunction"; 
 	}
 	
+	@RequestMapping(value="/event/editEventFunction") 
+	public String editEventFunction(Model model,HttpServletRequest request) { 
+		
+		model.addAttribute("bucketList", couchbaseService.getBucketList());
+		model.addAttribute("functions", couchbaseService.getEventFunctionDetail(request));
+		
+		return "/event/editEventFunction"; 
+	}
+	
 	@RequestMapping(value="/analyticsPage") 
 	public String analyticsPage() { 
 		return "analyticsPage"; 

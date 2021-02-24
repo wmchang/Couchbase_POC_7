@@ -12,6 +12,50 @@
 		
 		let win = window.open('newEventFunction','팝업스','width=700, height=600, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no');
 	}
+	
+	function deploy(functionName){
+		
+		$.ajax({
+			
+			url:"<%=request.getContextPath()%>/deployEventFunction?functionName="+functionName,
+			type:"post",
+			error : function(xhr, status, error){
+				alert(error);
+			},
+			success : function(data){
+				
+				alert(data);
+				if(data.includes('정상'))
+					location.reload();
+			}
+		});
+		
+	}
+	
+	function undeploy(functionName){
+		
+		$.ajax({
+			
+			url:"<%=request.getContextPath()%>/undeployEventFunction?functionName="+functionName,
+			type:"post",
+			error : function(xhr, status, error){
+				alert(error);
+			},
+			success : function(data){
+				
+				alert(data);
+				if(data.includes('정상'))
+					location.reload();
+			}
+		});
+	}
+	
+	function editEventFunction(functionName){
+		
+		let win = window.open('editEventFunction?functionName='+functionName,'팝업스','width=700, height=600, left=2500, top=1, menubar=no, status=no, toolbar=no');
+		
+	}
+	
 </script>
 
 </head>
@@ -35,42 +79,48 @@
 						    <col width="15%" />
 						    <col width="20%" />
 						    <col width="20%" />
-						    <col width="5%" />
 						    <col width="20%" />
+						    <col width="5%" />
+						    <col width="5%" />
+						    <col width="5%" />
 						</colgroup>
 						<thead>
 							<tr>
 								<th>Function 이름</th>
 								<th>Source KeySpace</th>
-								<th>Target KeySpace</th>
-								<th>상태</th>
+								<th>Meta KeySpace</th>
 								<th>설명</th>
+								<th>상태</th>
+								<th></th>
 							</tr>
 						</thead>
 					
 						<tbody>
 							<c:forEach items="${functionList }" var="list">
 								<tr>
-									<td>${list.functionName }</td>
+									<td><a href=# onclick="editEventFunction('${list.functionName }')">${list.functionName }</a></td>
 									
-									<td>${list.bucketInfo.buckets[0].bucket_name }.
-									${list.bucketInfo.buckets[0].scope_name }.
-									${list.bucketInfo.buckets[0].collection_name }</td>
+									<td>${list.bucketInfo.source_bucket }.
+									${list.bucketInfo.source_scope }.
+									${list.bucketInfo.source_collection }</td>
 									
-									<td>${list.bucketInfo.buckets[1].bucket_name }.
-									${list.bucketInfo.buckets[1].scope_name }.
-									${list.bucketInfo.buckets[1].collection_name }</td>
+									<td>${list.bucketInfo.metadata_bucket }.
+									${list.bucketInfo.metadata_scope }.
+									${list.bucketInfo.metadata_collection }</td>
+									
+									<td>${list.settings.description }</td>
+									
 									
 									<c:choose>
 										<c:when test="${list.settings.deployment_status eq 'false'}">
 											<td>undeployed</td>
+											<td><button class="btn btn-primary" onclick="deploy('${list.functionName }')">deploy</button></td>
 										</c:when>
 										<c:when test="${list.settings.deployment_status eq 'true'}">
 											<td>deployed</td>
+											<td><button class="btn btn-warning" onclick="undeploy('${list.functionName }')">undeploy</button></td>
 										</c:when>
 									</c:choose>
-									
-									<td>${list.settings.description }</td>
 									
 								</tr>
 							</c:forEach>

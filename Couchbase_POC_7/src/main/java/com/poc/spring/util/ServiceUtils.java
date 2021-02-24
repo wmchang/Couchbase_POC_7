@@ -1,13 +1,18 @@
 package com.poc.spring.util;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -166,4 +172,79 @@ public class ServiceUtils {
 	    
 	    return map;
 	}
+	
+	// Object(DTO) 끼리 변한 값을 출력함.
+	public static <T> Object getDiffrence(T target1, T target2, Class<T> targetClass) {
+
+		List<String> list = new ArrayList<String>();
+		try {
+			for (PropertyDescriptor pd : Introspector.getBeanInfo(targetClass, Object.class).getPropertyDescriptors()) {
+				Object value1 = pd.getReadMethod().invoke(target1);
+				Object value2 = pd.getReadMethod().invoke(target2);
+
+				if (value1 != null && value2 != null) {
+					if (!value1.equals(value2)) {
+						
+						list.add(pd.getName());
+
+					}
+				}
+
+			}
+			return list;
+		} catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+//	
+//	public List<String> getJsonDiffrence(JSONObject json1, JSONObject json2) {
+//		
+//		List<String> list = new ArrayList<String>();
+//		
+//		List<String> keyList1 = new ArrayList<String>();
+//		List<String> keyList2 = new ArrayList<String>();
+//		
+//		try {
+//			Iterator<String> i = json1.keySet().iterator();
+//			
+//			while(i.hasNext()) {
+//				String key = i.next();
+//				
+//				keyList1.add(key);
+//			}
+//			Iterator<String> i2 = json2.keySet().iterator();
+//			
+//			while(i2.hasNext()) {
+//				String key = i2.next();
+//				
+//				keyList2.add(key);
+//			}
+//			
+//			System.out.println(keyList1.toString());
+//			System.out.println(keyList2.toString());
+//			
+//			for(String key : keyList1) {
+//				try {
+//					String value1 = (String) json1.get(key);
+//					String value2 = (String) json2.get(key);
+//					
+//					
+//					
+//					if(!value1.equals(value2)) {
+//						list.add(key);
+//					}
+//				}
+//				catch(NullPointerException e) {
+//					continue;
+//				}
+//				
+//			}
+//			
+//			return list;
+//		}catch(Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return null;
+//	}
 }

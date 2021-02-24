@@ -11,7 +11,7 @@
 
 </head>
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script src="<%= request.getContextPath()%>/static/js/head_function.js"></script>
+<script src="<%= request.getContextPath()%>/static/js/head_function.js"  charset="utf-8"></script>
 
 <body>
 

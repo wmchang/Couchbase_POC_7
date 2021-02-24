@@ -135,7 +135,13 @@
 				alert(error);
 			},
 			success : function (data){
-				alert(data);
+				if(data.includes('Stored function')){
+					alert('Function을 생성했습니다.');
+					window.close();
+					opener.location.reload();
+				}
+				else
+					alert(data);
 			}
 		}); 
 	}

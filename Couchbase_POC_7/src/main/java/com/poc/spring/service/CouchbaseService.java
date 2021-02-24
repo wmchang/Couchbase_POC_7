@@ -67,6 +67,9 @@ import com.poc.spring.util.ServiceUtils;
 @Service
 public class CouchbaseService {
 	
+	
+	// 업데이트 이벤트펑션
+	
 	@Autowired
 	ServiceUtils serviceUtil;
 	
@@ -1544,7 +1547,6 @@ public class CouchbaseService {
 	// Analytics
 	public Object analyticsQuery(HttpServletRequest request) {
 		
-		
 		if(cluster == null) {
 			return "서버와 연결해주십시오.";
 		}
@@ -1617,13 +1619,11 @@ public class CouchbaseService {
 		Map<String,Object> map = serviceUtil.getRequestToMap(request);
 		
 		try {
-			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
-		} catch (JsonProcessingException e) {
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map.toString()));
+		} catch (JsonProcessingException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
-		
-		
 		
 		// curl http://Administrator:admin123@localhost:8096/api/v1/functions/testFunction2
 		
@@ -1634,7 +1634,7 @@ public class CouchbaseService {
 		getSampleStatment.append(dto.getPassword());
 		getSampleStatment.append("@");
 		getSampleStatment.append(dto.getHostname());
-		getSampleStatment.append(":8096/api/v1/functions/testFunction2");
+		getSampleStatment.append(":8096/api/v1/functions/testFunction");
 		System.out.println(getSampleStatment);
 		
 		String result = serviceUtil.curlExcute(getSampleStatment.toString()).get("result").toString();
@@ -1735,13 +1735,6 @@ public class CouchbaseService {
 			settings.put("timerContextSize", Integer.parseInt((String)map.get("timerContextSize")));
 			settings.put("worker_count", Integer.parseInt((String)map.get("workers")));
 			
-			try {
-				System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
-			} catch (JsonProcessingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
 			String path = serviceUtil.cmdExecute("cd")+"";
 			
 			FileWriter file = new FileWriter(path+"/"+(String)map.get("functionName")+".json");
@@ -1764,7 +1757,6 @@ public class CouchbaseService {
 			statement.append(".json");
 			System.out.println(statement);
 			
-			
 			// 실행시켜보기
 			String createResult = serviceUtil.curlExcute(statement.toString()).get("result").toString();
 
@@ -1779,5 +1771,140 @@ public class CouchbaseService {
 		return null;
 	}
 
+	public Object deployEventFunction(HttpServletRequest request) {
+		
+		String functionName = request.getParameter("functionName");
+		
+		// curl -XPOST http://Administrator:password@localhost:8096/api/v1/functions/testFunction3/deploy
+
+		StringBuilder statement = new StringBuilder();
+		
+		statement.append("curl -XPOST http://");
+		statement.append(dto.getUsername());
+		statement.append(":");
+		statement.append(dto.getPassword());
+		statement.append("@");
+		statement.append(dto.getHostname());
+		statement.append(":8096/api/v1/functions/");
+		statement.append(functionName);
+		statement.append("/deploy");
+		System.out.println(statement.toString());
+		
+		String result = serviceUtil.curlExcute(statement.toString()).get("result").toString();
+		
+		return result;
+		
+	}
+	
+	public Object undeployEventFunction(HttpServletRequest request) {
+		
+		String functionName = request.getParameter("functionName");
+		
+		// curl -XPOST http://Administrator:password@localhost:8096/api/v1/functions/testFunction3/undeploy
+
+		StringBuilder statement = new StringBuilder();
+		
+		statement.append("curl -XPOST http://");
+		statement.append(dto.getUsername());
+		statement.append(":");
+		statement.append(dto.getPassword());
+		statement.append("@");
+		statement.append(dto.getHostname());
+		statement.append(":8096/api/v1/functions/");
+		statement.append(functionName);
+		statement.append("/undeploy");
+		System.out.println(statement.toString());
+		
+		String result = serviceUtil.curlExcute(statement.toString()).get("result").toString();
+		
+		return result;
+	}
+	
+	public Object getEventFunctionDetail(HttpServletRequest request) {
+		
+		String functionName = request.getParameter("functionName");
+		// curl http://Administrator:admin123@localhost:8096/api/v1/functions/testFunction2
+		
+		StringBuffer statement = new StringBuffer();
+		statement.append("curl http://");
+		statement.append(dto.getUsername());
+		statement.append(":");
+		statement.append(dto.getPassword());
+		statement.append("@");
+		statement.append(dto.getHostname());
+		statement.append(":8096/api/v1/functions/");
+		statement.append(functionName);
+		System.out.println(statement);
+		
+		String result = serviceUtil.curlExcute(statement.toString()).get("result").toString();
+		
+		try {
+			JSONObject json = (JSONObject) parser.parse(result);
+			
+			return json;
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+
+	public Object updateEventFunction(HttpServletRequest request) {
+		try {
+			Map<String,Object> map = serviceUtil.getRequestToMap(request);
+			
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
+			
+			/*
+			 * curl -s -XPOST -d '{"deployment_status":false,"processing_status":false,"worker_count":6}' 
+			 *  http://Administrator:admin123@localhost:8096/api/v1/functions/testFunction3/settings
+			 */
+			
+			String functionName = request.getParameter("existingFunctionName");
+			
+			StringBuffer statement = new StringBuffer();
+			statement.append("curl -s -XPOST http://");
+			statement.append(dto.getUsername());
+			statement.append(":");
+			statement.append(dto.getPassword());
+			statement.append("@");
+			statement.append(dto.getHostname());
+			statement.append(":8096/api/v1/functions/");
+			statement.append(functionName);
+			statement.append("/settings");
+			statement.append(" -d ");
+			
+			if(map.containsValue("undefined")) {
+				
+				int length = Integer.parseInt((String)map.get("aliasLength"));
+				
+				for(int i =0;i<length;i++) {
+					
+					String bindingType = (String)map.get("bindingType"+i);
+					
+					// bindingType에 undefined 가 있을 때, 수정.
+					// 문의 메일 보냈음 (update 방법)
+					
+				}
+				
+			}else {
+				map.remove("existingFunctionName");
+				map.remove("aliasLength");
+				statement.append(mapper.writeValueAsString(map));
+			}
+			
+			System.out.println(statement);
+
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// String result = serviceUtil.curlExcute(statement.toString()).get("result").toString();
+		
+		
+		return null;
+	}
 }
 

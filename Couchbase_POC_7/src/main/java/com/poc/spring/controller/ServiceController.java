@@ -195,4 +195,26 @@ public class ServiceController {
 		
 		return couchbaseService.createEventFunction(request);
 	}
+	
+	@RequestMapping(value="/deployEventFunction", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object deployEventFunction(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.deployEventFunction(request);
+	}
+	
+	@RequestMapping(value="/undeployEventFunction", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object undeployEventFunction(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.undeployEventFunction(request);
+	}
+
+	
+	@RequestMapping(value="/updateEventFunction", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object updateEventFunction(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.updateEventFunction(request);
+	}
 }	

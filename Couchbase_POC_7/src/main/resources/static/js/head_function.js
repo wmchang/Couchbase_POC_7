@@ -69,3 +69,37 @@ let _left = (window.screen.width/2)-(300/2);
 	}
 	
 	
+	// form 데이터를 Object화 시켜주는 메소드. (key:value)
+	function getFormData($form){
+	    var unindexed_array = $form.serializeArray();
+	    var indexed_array = {};
+
+	    $.map(unindexed_array, function(n, i){
+	        indexed_array[n['name']] = n['value'];
+	    });
+
+	    return indexed_array;
+	}
+	
+	// Object를 비교해 다른 값, 혹은 사라진 key=value&로 추출해내는 메소드
+	// return 값 = key=value&key2=value2&
+	function _compare(newData, existsData){
+		
+		let arrays = Object.keys(existsData);
+		
+		let str = '';
+		
+		for(let i=0;i<arrays.length;i++){
+			
+			let key = arrays[i];
+			
+			// 기존 key에 해당하는 value가 달라진 경우, 기존 Key가 사라진 경우
+ 			if(newData[key] != existsData[key]){
+				
+				str +=key+'='+newData[key]+'&';
+			}
+		}
+		
+		return str;
+	}
+	
