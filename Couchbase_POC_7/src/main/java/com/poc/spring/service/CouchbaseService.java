@@ -2,6 +2,8 @@ package com.poc.spring.service;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
@@ -13,7 +15,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -31,9 +32,11 @@ import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.BucketExistsException;
 import com.couchbase.client.core.error.BucketNotFoundException;
 import com.couchbase.client.core.error.DatasetNotFoundException;
+import com.couchbase.client.core.error.DecodingFailureException;
 import com.couchbase.client.core.error.DocumentExistsException;
 import com.couchbase.client.core.error.IndexExistsException;
 import com.couchbase.client.core.error.IndexFailureException;
+import com.couchbase.client.core.error.InvalidArgumentException;
 import com.couchbase.client.core.error.PlanningFailureException;
 import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.Bucket;
@@ -42,6 +45,7 @@ import com.couchbase.client.java.ClusterOptions;
 import com.couchbase.client.java.analytics.AnalyticsResult;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.java.env.ClusterEnvironment.Builder;
+import com.couchbase.client.java.json.JsonArray;
 import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.GetResult;
 import com.couchbase.client.java.manager.bucket.BucketManager;
@@ -57,6 +61,7 @@ import com.couchbase.client.java.search.result.SearchResult;
 import com.couchbase.client.java.search.result.SearchRow;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVReader;
 import com.poc.spring.dto.BucketSettingDTO;
 import com.poc.spring.dto.CompactionDTO;
 import com.poc.spring.dto.ConnectDTO;
@@ -716,7 +721,12 @@ public class CouchbaseService {
 				 
 				 Map<Object, Object> resultMap = new HashMap<Object, Object>();
 				 resultMap.put("id", row.getString("id"));
-				 resultMap.put("content",  row.getObject("t") );
+				 try {
+					 resultMap.put("content",  row.getObject("t") );
+				 }
+				 catch(ClassCastException e) {
+					 resultMap.put("content",  row.getArray("t") );
+				 }
 				 
 				 list.add(resultMap);
 			 }
@@ -812,10 +822,14 @@ public class CouchbaseService {
 		String collectionName = request.getParameter("collectionName");
 		
 		
-		JSONObject obj = (JSONObject) parser.parse(documentText);
-		String jsonStr = obj.toString();
+		Object obj = null;
 		
-		JsonObject content = JsonObject.fromJson(jsonStr);
+		 try {
+			obj = (JSONObject) parser.parse(documentText);
+		}
+		 catch(ClassCastException e) {
+			obj = (JSONArray) parser.parse(documentText);
+		 }
 		
 		String bucketName;
 		if(request.getParameter("bucketName") == null)
@@ -823,7 +837,7 @@ public class CouchbaseService {
 		else
 			bucketName = request.getParameter("bucketName");
 		
-		cluster.bucket(bucketName).scope(scopeName).collection(collectionName).upsert(documentId, content);
+		cluster.bucket(bucketName).scope(scopeName).collection(collectionName).upsert(documentId, obj);
 			
 		return "문서 '"+documentId + "' 가 정상적으로 변경되었습니다.";
 	}
@@ -847,14 +861,19 @@ public class CouchbaseService {
 				
 				JsonObject json = (JsonObject) queryResult.rowsAsObject().get(0).get("t");
 				
-				System.out.println(json);
-				/// jsonObject >>> JSONObject
-				
 				documentDetails = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 				
 			}else {
 				result = cluster.bucket(bucketName).scope(scopeName).collection(collectionName).get(documentId);
-				JSONObject json = (JSONObject) parser.parse(result.contentAsObject().toString());
+				
+				Object json= null;
+				
+				 try {
+					json = (JSONObject) parser.parse(result.contentAsObject().toString());
+				 }
+				 catch(DecodingFailureException e) {
+					json = parser.parse(result.contentAsArray().toString());
+				 }
 				
 				documentDetails = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 			}
@@ -862,9 +881,6 @@ public class CouchbaseService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		System.out.println(documentDetails);
-		
 		return documentDetails;
 	}
 	
@@ -1054,153 +1070,186 @@ public class CouchbaseService {
 		String createLocalPath = "C:/upload/"; 			// 로컬 업로드 경로
 		File newFile = new File(createLocalPath);
 		String importFilePath = "";						// 파일 경로 + 파일명
-		String docID = mRequest.getParameter("docId");	// docID
-		String cbPath = mRequest.getParameter("cbPath");
+		String docId = mRequest.getParameter("docId");	// docID
+		String batchType = mRequest.getParameter("batchType");
 		String bucketName = mRequest.getParameter("bucketName");
 		String scopeName = mRequest.getParameter("scopeName");
 		String collectionName = mRequest.getParameter("collectionName");
-		String columnOfExcel = mRequest.getParameter("columnOfExcel");
-		String fileExtension = mRequest.getParameter("fileExtension");
+		String keyIsExcel = mRequest.getParameter("keyIsExcel");
 		
-		if(columnOfExcel == null)
-			columnOfExcel = "false";
+		if(keyIsExcel == null)
+			keyIsExcel = "false";
 		
 		if (!newFile.isDirectory()) { 			// 파일 디렉토리 확인 및 디렉토리 생성
 			newFile.mkdir();
 		}
 		
-		StringBuilder statement = new StringBuilder();
-		 
-		// select count(*) from `test`as t where meta(t).id like "test__%";
-		statement.append("select count(*) from `");
-		statement.append(bucket.name());
-		statement.append("` as t where meta(t).id like \"");
-		statement.append(docID+"__%\"");
-		System.out.println(statement);
-		QueryResult result = cluster.query(statement.toString());
-		 
-		List<JsonObject> list = result.rowsAsObject();
-		JsonObject content =list.get(0);
-		int num = Integer.parseInt(content.get("$1").toString());
-		
-		if(num != 0)
-			docID = docID+"_"+(num+1);
-		
-		
 		MultipartFile file = mRequest.getFile("fileName"); 	// fileName Request
 		String originalName = file.getOriginalFilename(); // Original FileName
 		importFilePath = createLocalPath + originalName; 				// File Path
+		String fileExtension = originalName.substring(originalName.lastIndexOf(".")+1);
 		
-		if(!new File(importFilePath).exists()) {
-			file.transferTo(new File(importFilePath));		//FilePath에 파일 생성
+		if(keyIsExcel.equals("false")) {
+			
+			StringBuilder statement = new StringBuilder();
+			 
+			// select count(*) from `test`as t where meta(t).id like "test__%";
+			statement.append("select count(*) from `");
+			statement.append(bucket.name());
+			statement.append("` as t where meta(t).id like \"");
+			statement.append(docId+"__%\"");
+			System.out.println(statement);
+			QueryResult result = cluster.query(statement.toString());
+			 
+			List<JsonObject> list = result.rowsAsObject();
+			JsonObject content =list.get(0);
+			int num = Integer.parseInt(content.get("$1").toString());
+			docId = docId+"_"+(num+1);
 		}
 		
-		if(StringUtils.isNotBlank(docID)) {			//문서 아이디가 공백이 아니며, 쓰레드 개수가 0 이상일 때
-			if (fileExtension.equals("csv")) {					//파일 확장자가 csv일 경우
+		// CSV + UTF-8
+		if(fileExtension.equals("csv")) {
+			CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream(), Charset.forName("UTF-8")));
+			
+			JsonArray array = JsonArray.create();
+			String keys[] = csvReader.readNext();
+			
+			String text[] = null;
+			while((text = csvReader.readNext()) != null) {
 				
-				StringBuilder csvCommand = new StringBuilder();
-				
-				csvCommand.append(cbPath);
-				csvCommand.append("/cbimport csv -c couchbase://");
-				csvCommand.append(dto.getHostname());
-				csvCommand.append(" -u ");
-				csvCommand.append(dto.getUsername());
-				csvCommand.append(" -p ");
-				csvCommand.append(dto.getPassword());
-				csvCommand.append(" -b ");
-				csvCommand.append(bucketName);
-				csvCommand.append(" --scope-collection-exp ");
-				csvCommand.append(scopeName);
-				csvCommand.append(".");
-				csvCommand.append(collectionName);
-				csvCommand.append(" -d file://");
-				csvCommand.append(importFilePath);
-				csvCommand.append(" -g ");
-				if(columnOfExcel.equals("true")) {
-					csvCommand.append("%");
-					csvCommand.append(docID);
-					csvCommand.append("%");
-				}else
-					csvCommand.append(docID);
-				csvCommand.append(" -t 2 ");
-				System.out.println(csvCommand);
-				
-				String curlResult = serviceUtil.curlExcute(csvCommand.toString()).get("result").toString();
-				
-				return curlResult.substring(curlResult.indexOf("successfully"));
-				
-			} else if (fileExtension.equals("json")) {			//파일 확장자가 json일 경우
-				
-				StringBuilder jsonCommand = new StringBuilder();
-				
-				jsonCommand.append(cbPath);
-				jsonCommand.append("/cbimport json -c couchbase://");
-				jsonCommand.append(dto.getHostname());
-				jsonCommand.append(" -u ");
-				jsonCommand.append(dto.getUsername());
-				jsonCommand.append(" -p ");
-				jsonCommand.append(dto.getPassword());
-				jsonCommand.append(" -b ");
-				jsonCommand.append(bucketName);
-				jsonCommand.append(" --scope-collection-exp ");
-				jsonCommand.append(scopeName);
-				jsonCommand.append(".");
-				jsonCommand.append(collectionName);
-				jsonCommand.append(" -d file://");
-				jsonCommand.append(importFilePath);
-				jsonCommand.append(" -f lines -g ");
-				if(columnOfExcel.equals("true")) {
-					jsonCommand.append("%");
-					jsonCommand.append(docID);
-					jsonCommand.append("%");
-				}else
-					jsonCommand.append(docID);
-				jsonCommand.append(" -t 2 ");
-				System.out.println(jsonCommand);
-				
-				String curlResult = serviceUtil.curlExcute(jsonCommand.toString()).get("result").toString();
-				
-				return curlResult.substring(curlResult.indexOf("successfully"));
-				
-			} else if (fileExtension.equals("jsonList")){
-				
-				StringBuilder jsonCommand = new StringBuilder();
-				
-				jsonCommand.append(cbPath);
-				jsonCommand.append("/cbimport json -c couchbase://");
-				jsonCommand.append(dto.getHostname());
-				jsonCommand.append(" -u ");
-				jsonCommand.append(dto.getUsername());
-				jsonCommand.append(" -p ");
-				jsonCommand.append(dto.getPassword());
-				jsonCommand.append(" -b ");
-				jsonCommand.append(bucketName);
-				jsonCommand.append(" --scope-collection-exp ");
-				jsonCommand.append(scopeName);
-				jsonCommand.append(".");
-				jsonCommand.append(collectionName);
-				jsonCommand.append(" -d file://");
-				jsonCommand.append(importFilePath);
-				jsonCommand.append(" -f list -g ");
-				if(columnOfExcel.equals("true")) {
-					jsonCommand.append("%");
-					jsonCommand.append(docID);
-					jsonCommand.append("%");
-				}else
-					jsonCommand.append(docID);
-				jsonCommand.append(" -t 2 ");
-				System.out.println(jsonCommand);
-				
-				String curlResult = serviceUtil.curlExcute(jsonCommand.toString()).get("result").toString();
-				
-				return curlResult.substring(curlResult.indexOf("successfully"));
-				
+				int i=0;
+				JsonObject json = JsonObject.create();
+
+				for(String value : text) {
+					json.put(keys[i], value);
+					i++;
+				}
+				array.add(json);
+			}
+			
+			if(batchType.equals("batch")) {
+				cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(docId, array);
 			}
 			else {
-				return "확장자가 잘못되었습니다.";
+				
+				// 파일내 컬럼을 Key로 지정했을 때 (개별 문서 + 파일내에서 키지정)
+				if(keyIsExcel.equals("true")) {
+					String returnMessage = null;
+					for(Object json : array) { // +1 
+						
+						JsonObject jsonObj =(JsonObject)json;
+						try {
+							String key_docId = (String) jsonObj.get(docId);
+							cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(key_docId, json);
+						}
+						catch(InvalidArgumentException e) {
+							System.out.println(e.getLocalizedMessage());
+							return "해당하는 문서 ID가 존재하지 않습니다.";
+						}
+						catch(DocumentExistsException e) {
+							System.out.println(e.getLocalizedMessage());
+							returnMessage = "겹치는 문서 ID 혹은 이미 존재하는 문서가 있습니다. \t\n ID가 겹치지 않는 문서만 삽입됩니다.";
+							continue;
+						}
+					}
+					if(returnMessage!= null)
+						return returnMessage;
+				}else {
+					// ( 개별문서 + 정해진키 )
+					for(Object json : array) { // +1 
+						cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(docId, json);
+						int number = Integer.parseInt(docId.substring(docId.lastIndexOf("_")+1)) + 1;
+						docId = docId.substring(0,docId.lastIndexOf("_")+1);
+						docId += Integer.toString(number);
+					}
+				}
 			}
 		}
-		return "?";
+		// JSON
+		else if(fileExtension.equals("json")) {
+			
+			Object obj = parser.parse(new InputStreamReader(file.getInputStream()));
+			try{
+				obj = (JSONObject) obj;
+			}catch(ClassCastException e) {
+				obj = (JSONArray) obj;
+			}
+			
+			if(batchType.equals("batch")) {
+				cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(docId, obj);
+			}
+			else {
+				
+				// 개별문서 + 파일 내 컬럼지정
+				if(keyIsExcel.equals("true")) {
+					String returnMessage = null;
+					try {
+						JSONArray array = (JSONArray) obj;
+						int num = 0;
+						
+						for(int i=0;i<array.size();i++) {
+							
+							JSONObject json = (JSONObject) array.get(i);
+							String key_id = null;
+							
+							try {
+								key_id = (String) json.get(docId);
+								cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(key_id, json);
+
+							}
+							catch(InvalidArgumentException e) {
+								return "파일에 해당 문서 ID가 존재하지 않습니다.";
+							}
+							catch(DocumentExistsException e) {
+								System.out.println(e.getLocalizedMessage());
+								returnMessage = "겹치는 문서 ID 혹은 이미 존재하는 문서가 있습니다. \t\n ID가 겹치지 않는 문서만 삽입됩니다.";
+								continue;
+							}
+						}
+						if(returnMessage!= null)
+							return returnMessage;
+					}
+					catch(ClassCastException e) {
+						JSONObject json = (JSONObject) obj;
+						
+						try {
+							String key_id = (String) json.get(docId);
+							cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(key_id, json);
+						}
+						catch(InvalidArgumentException e1) {
+							return "파일에 해당 문서 ID가 존재하지 않습니다.";
+						}
+						
+					}
+				}else { // 개별 문서 + 정해진 ID
+					
+					
+					try {
+						JSONArray array = (JSONArray) obj;
+						
+						for(Object json : array) {
+							
+							cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(docId, json);
+							
+							int number = Integer.parseInt(docId.substring(docId.lastIndexOf("_")+1)) + 1;
+							docId = docId.substring(0,docId.lastIndexOf("_")+1);
+							docId += Integer.toString(number);
+						}
+					}
+					catch(ClassCastException e) {
+						JSONObject json = (JSONObject) obj;
+						cluster.bucket(bucketName).scope(scopeName).collection(collectionName).insert(docId, json);
+						
+						return "JsonArray가 아니면 개별 문서로 삽입이 불가능합니다. 단일 문서"+docId+"를 작성했습니다.";
+					}
+				}
+			}
+			
+		}
+		else {
+			return "확장자가 잘못되었습니다.";
+		}
+		return "문서가 작성되었습니다.";
 	}
 
 	// Log
@@ -1905,6 +1954,64 @@ public class CouchbaseService {
 		
 		
 		return null;
+	}
+
+	public Object getPlanList() {
+		
+		if(dto == null)
+			return null;
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X GET -u");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/plan");
+		System.out.println(command);
+		
+		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
+		List<Object> list = new ArrayList<Object>();
+		
+		try {
+			JSONArray array = (JSONArray)parser.parse(result);
+			
+			for(int i=0;i<array.size();i++) {
+				
+				JSONObject json = (JSONObject)array.get(i);
+				
+				list.add(json);
+			}
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	public Object deletePlan(HttpServletRequest request) {
+		
+		// curl -u Administrator:admin123 http://localhost:8097/api/v1/plan/tdsfsadf -XDELETE
+		
+		String planName = request.getParameter("planName");
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X DELETE -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/plan/");
+		command.append(planName);
+		System.out.println(command);
+		
+		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
+		
+		return result;
 	}
 }
 

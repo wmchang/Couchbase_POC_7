@@ -30,19 +30,6 @@
 		});
 	}
 	
-	
-	function bucketChange(){
-		if(document.getElementById("bucketName").value=='-Select Bucket-')
-			return;
-		
-		let bucketName = $('#bucketName').val();
-		let scopeName = $('#scopeName').val();
-		let collectionName = $('#collectionName').val();
-		
-		location.href="<%= request.getContextPath()%>/randomDataPage?bucketName="+bucketName+"&scopeName="+scopeName+"&collectionName="+collectionName;
-		
-		
-	}
 </script>
 <body>
 	<!-- header.jsp -->
@@ -65,7 +52,7 @@
 						
 						<div>
 							<label ># Bucket</label>
-							<select name=bucketName onchange=bucketChange() id=bucketName>
+							<select name=bucketName onchange=bucketChange(this) id=bucket>
 									<option value='-Select Bucket-'>-Select Bucket-</option>
 								<c:forEach items="${bucketList }" var="list">
 									<option value=${list } <c:if test="${list eq bucketName}">selected</c:if>>${list }</option>
@@ -74,7 +61,7 @@
 						</div>
 						<div>
 						<label ># Scope</label>
-						<select name=scopeName onchange=bucketChange() id=scopeName>
+						<select name=scopeName onchange=scopeChange(this) id=bucketScope>
 							<c:forEach items="${scopeList }" var="list">
 								<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
 							</c:forEach>
@@ -83,7 +70,7 @@
 						
 						<div>
 						<label ># Collection</label>
-						<select name=collectionName id=collectionName>
+						<select name=collectionName id=bucketScopeCollection>
 							<c:forEach items="${collectionList }" var="list">
 								<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
 							</c:forEach>

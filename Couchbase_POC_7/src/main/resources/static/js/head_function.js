@@ -103,3 +103,59 @@ let _left = (window.screen.width/2)-(300/2);
 		return str;
 	}
 	
+	
+	
+	// SelectBox에서 Bucket이 변할 때, 해당하는 Scope로 Scope SelectBox를 바꿔주는 메소드.
+	// id == bucket > bucketScope > bucketScopeCollection
+	function bucketChange(chk){
+	
+	if(chk.value=='-Select Bucket-')
+		return;
+
+		$.ajax({
+			
+			type:"post",
+			url:"/getScope?bucketName="+chk.value,
+			error: function (xhr,status,error){
+				alert(error);
+			},
+			success: function (data){
+				
+				let nowSelectScope = $('#'+chk.id+'Scope');
+				let nowSelectCollection = $('#'+chk.id+'ScopeCollection');
+				nowSelectScope.empty();
+				nowSelectCollection.empty();
+				
+		        $.each(data,function(index, item){
+		        	nowSelectScope.append('<option value='+item+'>'+item+'</option>');
+		        });
+		        
+		        document.getElementById(chk.id+'Scope').onchange();
+		        
+			}
+		});
+	}
+	
+	function scopeChange(chk){
+		
+		let bucketNameId = chk.id.replace('Scope','');
+		let bucketName = $('#'+bucketNameId).val();
+		
+		$.ajax({
+			type:"post",
+			url:"/getCollection?bucketName="+bucketName+"&scopeName="+chk.value,
+			error: function (xhr,status,error){
+				alert(error);
+			},
+			success: function (data){
+				
+				let nowSelect = $('#'+chk.id+'Collection');
+				nowSelect.empty();
+				
+		        $.each(data,function(index, item){
+		        	nowSelect.append('<option value='+item+'>'+item+'</option>');
+		        });
+			}
+		});
+	}
+	

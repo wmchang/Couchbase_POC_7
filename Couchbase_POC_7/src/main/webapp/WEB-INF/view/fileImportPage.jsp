@@ -36,12 +36,15 @@ function uploadFile() {
 	});
 }
 
-
-function bucketChange(){
-	if(document.getElementById("bucketName").value=='-Select Bucket-')
-		return;
+function selectBatch(chk){
 	
-	$('#fileUpload').submit();
+	if(chk.value == 'batch'){
+		$("input:checkbox[id='keyIsExcel']").prop("checked", false);
+		$('#keyIsExcel').attr('disabled', 'true');
+	}
+	else{
+		$('#keyIsExcel').removeAttr('disabled');
+	}
 }
 
 </script>
@@ -55,7 +58,7 @@ function bucketChange(){
 	<div class=container>
 		<div class=row>
 			<div class="mx-auto col-lg-5"><br>
-	        <h4> &nbsp; CSV 혹은 JSON 파일 업로드 </h4><br>
+	        <h4> &nbsp; 파일 업로드 (CSV or JSON)<span style=font-size:12px;>(Encoding: UTF-8)</span> </h4><br>
 	        
 	        	<c:if test="${empty bucketName}">
 						<h5> 서버를 연결해주세요.</h5>
@@ -67,7 +70,7 @@ function bucketChange(){
 	        	
         			<div>
 						<label ># Bucket</label><br>
-						<select name=bucketName onchange=bucketChange() id=bucketName>
+						<select name=bucketName onchange=bucketChange(this) id=bucket>
 								<option value='-Select Bucket-'>-Select Bucket-</option>
 							<c:forEach items="${bucketList }" var="list">
 								<option value=${list } <c:if test="${list eq bucketName}">selected</c:if>>${list }</option>
@@ -76,7 +79,7 @@ function bucketChange(){
 					</div>
 					<div>
 					<label ># Scope</label><br>
-					<select name=scopeName onchange=bucketChange() id=scopeName>
+					<select name=scopeName onchange=scopeChange(this) id=bucketScope>
 						<c:forEach items="${scopeList }" var="list">
 							<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
 						</c:forEach>
@@ -85,34 +88,27 @@ function bucketChange(){
 					
 					<div>
 					<label ># Collection</label><br>
-					<select name=collectionName id=collectionName>
+					<select name=collectionName id=bucketScopeCollection>
 						<c:forEach items="${collectionList }" var="list">
 							<option value=${list } <c:if test="${list eq collectionName}">selected</c:if> >${list }</option>
 						</c:forEach>
 					</select>
 					</div>
 					<br>
-		        	<div>
-						# 확장자 선택<br>
-						<input type="radio" name="fileExtension" value="csv" checked />
-						<label>CSV</label> &nbsp;
-						
-						<input type="radio" name="fileExtension" value="json"  /> 
-						<label>Json</label> &nbsp;
-						
-						<input type="radio" name="fileExtension" value="jsonList"  /> 
-						<label>Json List</label> &nbsp;
-					</div>
 					<div>
 						# 문서 아이디
-						(<input type="checkbox" name="columnOfExcel" value="true" checked ><span style=font-size:10px> 파일내 컬럼으로 지정 </span>)
+						(<span style=font-size:10px> 파일내 컬럼으로 지정 </span><input type="checkbox" name="keyIsExcel" id=keyIsExcel value="true" >)
 						<br>
 						<input type="text" id="docId" name="docId" required="required" value="<%=(request.getParameter("docId")==null) ? "" : request.getParameter("docId") %>" />  
 					</div>
-					<div>
-						# cbimport 경로(Couchbase\Server\bin)<br>
-						<input type="text" name="cbPath"  required="required" value="<%=(request.getParameter("cbPath")==null) ? "" : request.getParameter("cbPath") %>" />
-					</div><br>
+		        	<div>
+						# 형태 선택<br>
+						<input type="radio" name="batchType" value="split" checked  onchange="selectBatch(this)" />
+						<label>컬럼별로 개별 문서로 삽입</label> &nbsp;
+						
+						<input type="radio" name="batchType" value="batch" onchange="selectBatch(this)"  /> 
+						<label>모두 한 문서에 삽입</label> &nbsp;
+					</div>
 					<div>
 						파일 경로 : <input id="fileName" name="fileName" type=file
 									accept=".csv, .json" required="required" >

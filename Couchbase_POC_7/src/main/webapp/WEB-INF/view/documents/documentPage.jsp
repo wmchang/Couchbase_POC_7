@@ -38,7 +38,7 @@
 		var document_window = window.open('newDocument?bucketName=${bucketName}&scopeName=${scopeName}&collectionName=${collectionName}','팝업스','width=550, height=570, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no')
 	}
 	
-	function bucketChange(){
+	function docBucketChange(){
 		if(document.getElementById("bucketName").value=='-Select Bucket-')
 			return;
 		
@@ -48,7 +48,6 @@
 	function scopeOrCollectionChange(){
 
 		document.getElementById("documentPageForm").submit();
-		
 	}
 	
 	function createPrimaryIndex(){
@@ -60,7 +59,6 @@
 				alert(error);
 			},
 			success : function(data) {
-				
 				
 				if(data.includes("생성")){
 					alert(data);
@@ -108,7 +106,7 @@
 						<form id=documentPageForm action=documentPage style=display:inline-block;>
 						
 							<label >Bucket:</label>
-							<select name=bucketName onchange=bucketChange() id=bucketName>
+							<select name=bucketName onchange=docBucketChange() id=bucketName>
 									<option value='-Select Bucket-'>-Select Bucket-</option>
 								<c:forEach items="${bucketList }" var="list">
 									<option value=${list } <c:if test="${list eq bucketName}">selected</c:if>>${list }</option>
@@ -138,9 +136,6 @@
 						<button class="btn btn-primary" onclick="newDocument();">Document 추가</button>
 					</div>	
 					
-						<div>
-							
-						</div>
 						<table class="table table-striped table-hover">
 							<colgroup>
 							    <col width="30%" />

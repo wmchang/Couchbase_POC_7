@@ -39,7 +39,7 @@ public class CouchbaseThread implements Runnable{
       		}
       		--docCount;
       		bucket.scope(scopeName).collection(collectionName)
-      				.upsert(RandomStringUtils.randomAlphanumeric(docIdSize), JsonObject.create().put("a", RandomStringUtils.randomAlphanumeric(docSize)));
+      				.upsert(RandomStringUtils.randomAlphanumeric(docIdSize), JsonObject.create().put("temp", RandomStringUtils.randomAlphanumeric(docSize)));
   			
       	}
       }catch(Exception e) {

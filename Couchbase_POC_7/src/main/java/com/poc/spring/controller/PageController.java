@@ -388,5 +388,26 @@ public class PageController {
 	public String emailAlertsPage() { 
 		return "/settings/emailAlertsPage"; 
 	}
+	
+	@RequestMapping(value="/backup/planPage") 
+	public String planPage(Model model) { 
+		
+		Object list  = couchbaseService.getPlanList();
+		
+		model.addAttribute("planList", list);
+		return "/backup/planPage"; 
+	}
+	
+	@RequestMapping(value="/backup/repositoryPage") 
+	public String repositoryPage() { 
+		
+		return "/backup/repositoryPage"; 
+	}
+	
+	@RequestMapping(value="/backup/newPlan") 
+	public String newPlan() { 
+		
+		return "/backup/newPlan"; 
+	}
 
 }

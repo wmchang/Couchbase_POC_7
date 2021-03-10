@@ -13,59 +13,6 @@
 
 <script>
 	
-	function bucketChange(chk){
-		
-		if(chk.value=='-Select Bucket-')
-			return;
-		
-
-		$.ajax({
-			
-			type:"post",
-			url:"<%=request.getContextPath()%>/getScope?bucketName="+chk.value,
-			error: function (xhr,status,error){
-				alert(error);
-			},
-			success: function (data){
-				
-				let nowSelectScope = $('#'+chk.id+'Scope');
-				let nowSelectCollection = $('#'+chk.id+'ScopeCollection');
-				nowSelectScope.empty();
-				nowSelectCollection.empty();
-				
-		        $.each(data,function(index, item){
-		        	nowSelectScope.append('<option value='+item+'>'+item+'</option>');
-		        });
-		        
-		        document.getElementById(chk.id+'Scope').onchange();
-		        
-			}
-		});
-	}
-	
-	function scopeChange(chk){
-		
-		let bucketNameId = chk.id.replace('Scope','');
-		let bucketName = $('#'+bucketNameId).val();
-		
-		$.ajax({
-			type:"post",
-			url:"<%=request.getContextPath()%>/getCollection?bucketName="+bucketName+"&scopeName="+chk.value,
-			error: function (xhr,status,error){
-				alert(error);
-			},
-			success: function (data){
-				
-				let nowSelect = $('#'+chk.id+'Collection');
-				nowSelect.empty();
-				
-		        $.each(data,function(index, item){
-		        	nowSelect.append('<option value='+item+'>'+item+'</option>');
-		        });
-			}
-		});
-	}
-	
 	function viewSetting(){
 		
 		
@@ -366,9 +313,9 @@
 			<br>
 			
 			<h5 style="margin-bottom:-20px;"> ¹ÙÀÎµù </h5>
-				<button type=button class="btn btn-light" style="float:right; margin-left:10px;" onclick="removeBinding();">-</button>
-				<button type=button class="btn btn-light" style=float:right onclick="addBinding();">+</button>
-				<br>
+			<button type=button class="btn btn-light" style="float:right; margin-left:10px;" onclick="removeBinding();">-</button>
+			<button type=button class="btn btn-light" style=float:right onclick="addBinding();">+</button>
+			<br>
 			<hr>
 			
 			<div id=bindingDiv>

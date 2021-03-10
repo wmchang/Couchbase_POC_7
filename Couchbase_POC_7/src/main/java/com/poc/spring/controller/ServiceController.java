@@ -209,12 +209,18 @@ public class ServiceController {
 		
 		return couchbaseService.undeployEventFunction(request);
 	}
-
 	
 	@RequestMapping(value="/updateEventFunction", method=RequestMethod.POST) 
 	@ResponseBody
 	public Object updateEventFunction(HttpServletRequest request) throws Exception {
 		
 		return couchbaseService.updateEventFunction(request);
+	}
+	
+	@RequestMapping(value="/deletePlan", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object deletePlan(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.deletePlan(request);
 	}
 }	

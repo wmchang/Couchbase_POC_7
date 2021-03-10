@@ -9,6 +9,7 @@
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"> -->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><!-- 합쳐지고 최소화된 최신 자바스크립트 -->
 
+
 </head>
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="<%= request.getContextPath()%>/static/js/head_function.js"  charset="utf-8"></script>
@@ -50,6 +51,15 @@
 		</div>
 		<div class="menu">
 			<a href="<%= request.getContextPath()%>/fileImportPage"> 파일 업로드 </a>
+		</div>
+		<div class="menu">
+			<div class=dropdown>
+				<a href="<%= request.getContextPath()%>/backup/repositoryPage"> 백업 </a>
+				<div class="dropdown-content">
+					<a href="<%= request.getContextPath()%>/backup/repositoryPage"> 백업 </a>
+					<a href="<%= request.getContextPath()%>/backup/planPage"> 계획 </a>
+				</div>
+			</div>
 		</div>
 		<div class="menu">
 			<a href="<%= request.getContextPath()%>/logPage"> 로그 </a>
