@@ -57,10 +57,13 @@
 			type:'post',
 			url:"<%=request.getContextPath()%>/deletePlan",
 			error : function(xhr, status, error) {
-				console.log(error);
+				alert(error);
 			},
 			success : function(data){
-				console.log(data);
+				alert(data);
+				
+				if(data.includes('완료'))
+					location.reload();
 			}
 		});
 	}
@@ -92,7 +95,6 @@
 					
 					<colgroup>
 						<col width=30%>
-						<col width=10%>
 						<col width=40%>
 						<col width=10%>
 					</colgroup>
@@ -100,7 +102,6 @@
 					<thead>
 						<tr>
 							<th> 이름 </th>
-							<th> 사용되는 곳</th>
 							<th> 서비스 </th>
 							<th> 삭제 </th>
 						</tr>
@@ -110,7 +111,6 @@
 						<c:forEach items="${planList }" var="list" varStatus="status">
 							
 							<tr> 
-								<td> ${list.name }</td>
 								<td> ${list.name }</td>
 								<td> 
 									<c:choose>

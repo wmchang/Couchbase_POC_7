@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -398,16 +399,43 @@ public class PageController {
 		return "/backup/planPage"; 
 	}
 	
+	@RequestMapping(value="/backup/newPlan") 
+	public String newPlan(Model model) { 
+
+		return "/backup/newPlan"; 
+	}
+	
 	@RequestMapping(value="/backup/repositoryPage") 
-	public String repositoryPage() { 
+	public String repositoryPage(Model model) { 
+		
+		Object list = couchbaseService.getRepositoryList();
+		
+		model.addAttribute("repoList", list);
 		
 		return "/backup/repositoryPage"; 
 	}
-	
-	@RequestMapping(value="/backup/newPlan") 
-	public String newPlan() { 
-		
-		return "/backup/newPlan"; 
-	}
 
+	@RequestMapping(value="/backup/newRepository") 
+	public String newRepository(Model model) { 
+		
+		List<Object> list = (List<Object>) couchbaseService.getPlanList();
+		
+		List<String> planList = new ArrayList<String>();
+		
+		for(int i=0;i<list.size();i++) {
+			
+			JSONObject json = (JSONObject)list.get(i);
+			planList.add((String)json.get("name"));
+		}
+		
+		
+		List<String> bucketList = couchbaseService.getBucketList();
+		
+		model.addAttribute("planList", planList);
+		model.addAttribute("bucketList", bucketList);
+		
+
+		return "/backup/newRepository"; 
+	}
+	
 }

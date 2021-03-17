@@ -6,15 +6,23 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.logging.log4j.util.Strings;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -68,6 +76,8 @@ import com.poc.spring.dto.ConnectDTO;
 import com.poc.spring.dto.SettingDTO;
 import com.poc.spring.dto.querySettingsDTO;
 import com.poc.spring.util.ServiceUtils;
+
+import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 
 @Service
 public class CouchbaseService {
@@ -2013,5 +2023,312 @@ public class CouchbaseService {
 		
 		return result;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public Object addNewPlan(HttpServletRequest request) {
+		
+		Map<String,Object> map = serviceUtil.getRequestToMap(request);
+		
+		JSONObject json = new JSONObject();
+		
+		json.put("name", (String)map.get("planName"));
+		json.put("description", (String)map.get("description"));
+		
+		JSONArray serviceArray = new JSONArray();
+		try {
+			for(String str : (String[])map.get("service"))
+				serviceArray.add(str);
+			}
+		catch(ClassCastException e ) {
+			serviceArray.add(map.get("service"));
+		}
+		
+		json.put("services", serviceArray);
+		
+		int length = Integer.parseInt((String)map.get("taskLength"));
+		
+		JSONArray taskArray = new JSONArray();
+		
+		for(int i=0;i<length;i++) {
+			
+			
+			Iterator<String> keyIterator = map.keySet().iterator();
+			Map<String,String> dayMap = new HashMap<String,String>();
+			
+			
+			
+			if(map.get("period"+i).equals("WEEKS")) {
+				
+				while(keyIterator.hasNext()) {
+					String key = keyIterator.next();
+					
+					if(key.contains("day") && key.contains(Integer.toString(i))) {
+						
+						String day = key.substring(0,key.length()-1);
+						
+						JSONObject taskJson = new JSONObject();
+						taskJson.put("name", map.get("taskName"+i)+"_"+day);
+						
+						String type = "BACKUP";
+						if(map.get("task_type"+i) != null)
+							type = (String) map.get("task_type"+i);
+						
+						taskJson.put("task_type", type);
+						
+						if(map.get(key).equals("null"))
+							taskJson.put("full_backup",false);
+						else
+							taskJson.put("full_backup", true);
+						
+						
+						String frequency = "1";
+						if(map.get("frequency"+i)!=null)
+							frequency = (String) map.get("frequency"+i);
+						
+						JSONObject schJson = new JSONObject();
+						
+						schJson.put("job_type", type);
+						schJson.put("frequency", Integer.parseInt(frequency));
+						schJson.put("period", day.toUpperCase());
+						schJson.put("time", map.get("startTime"+i));
+						
+						taskJson.put("schedule", schJson);
+						
+						taskArray.add(taskJson);
+						
+					}
+				}
+			}else {
+				
+				JSONObject taskJson = new JSONObject();
+				taskJson.put("name", map.get("taskName"+i));
+				
+				String type = "BACKUP";
+				if(map.get("task_type"+i) != null)
+					type = (String) map.get("task_type"+i);
+				
+				taskJson.put("task_type", type);
+
+				
+				if(type.equals("BACKUP")) {
+					
+					if( map.get("fullBackup"+i)== null || map.get("fullBackup"+i).equals("null"))
+						taskJson.put("full_backup", false);
+					else
+						taskJson.put("full_backup", true);
+
+
+				}
+				else {
+					JSONObject optionJSON = new JSONObject();
+					optionJSON.put("offset_start", map.get("offsetStart"+i));
+					optionJSON.put("offset_end", map.get("offsetEnd"+i));
+					
+					taskJson.put("merge_options", optionJSON);
+					
+					taskJson.put("full_backup", false);
+				}
+				
+				String frequency = "1";
+				if(map.get("frequency"+i)!=null)
+					frequency = (String) map.get("frequency"+i);
+				
+				JSONObject schJson = new JSONObject();
+				
+				schJson.put("job_type", type);
+				schJson.put("frequency", Integer.parseInt(frequency));
+				schJson.put("period", map.get("period"+i));
+				
+				taskJson.put("schedule", schJson);
+				taskJson.put("options", null);
+				
+				taskArray.add(taskJson);
+				
+			}
+			
+			json.put("tasks", taskArray);
+		}
+		
+		try {
+			System.out.println("========================================");
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		StringBuilder command = new StringBuilder();
+
+		command.append("curl -v -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/plan/");
+		command.append(map.get("planName"));
+		command.append(" -d ");
+		command.append(json);
+
+		
+		String result = null;
+		
+		try {
+			
+			String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
+			str = str.substring(1,str.length()-1);
+
+			result = (String) serviceUtil.curlExcute(str).get("result");
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+		return result;
+	}
+
+	public Object getRepositoryList() {
+
+		
+		if(dto == null)
+			return null;
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X GET -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self");
+		System.out.println(command);
+		
+		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
+		List<Object> list = new ArrayList<Object>();
+		
+		
+		try {
+			JSONObject json = (JSONObject)parser.parse(result);
+			
+			JSONObject activeJson = (JSONObject) json.get("active");
+			
+			Iterator<String> keyIterator = activeJson.keySet().iterator();
+			
+			while(keyIterator.hasNext()) {
+				
+				JSONObject repoJson = (JSONObject) activeJson.get(keyIterator.next());
+				
+				JSONObject dayJson = (JSONObject)repoJson.get("scheduled");
+				Iterator<String> dayItr = dayJson.keySet().iterator();
+				List<String> dayList = new ArrayList<String>();
+				List<String> taskList = new ArrayList<String>();
+
+				while(dayItr.hasNext()) {
+					
+
+					JSONObject runJson = (JSONObject) dayJson.get(dayItr.next());
+					String day = (String)runJson.get("next_run");
+					dayList.add(day);
+					taskList.add((String)runJson.get("task_type"));
+				}
+				
+				String minDay = "";
+				String task = "";
+				
+				minDay = dayList.get(0);
+				
+				for(int i=0;i<dayList.size()-1;i++) {
+					
+					if(minDay.compareTo(dayList.get(i+1)) >= 1) {
+						minDay = dayList.get(i+1);
+						task = taskList.get(i+1);
+					}
+				}
+				
+				repoJson.put("nextStatus", "Next "+task+" "+minDay);
+				
+				list.add(repoJson);
+			}
+			
+			
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+
+	public Object addNewRepository(HttpServletRequest request) {
+		
+		Map<String,Object> map = serviceUtil.getRequestToMap(request);
+		
+		if(dto == null)
+			return null;
+		
+		JSONObject json = new JSONObject();
+		json.put("plan", map.get("planName"));
+		json.put("archive", map.get("archive"));
+		json.put("bucket_name", map.get("bucketName"));
+		
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/active/");
+		command.append(map.get("repositoryName"));
+		command.append(" -d ");
+		command.append(json);
+		
+		String com = "";
+		
+		try {
+			com = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
+			
+			com = com.substring(1,com.length()-1);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println(com);
+		
+		String result = serviceUtil.curlExcute(com).get("result").toString();
+		
+		System.out.println(result);
+		
+		return null;
+	}
+	
+	public Object deleteRepository(HttpServletRequest request) {
+		
+		// curl -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/repositoryid -XDELETE
+		
+		String repositoryName = request.getParameter("repositoryName");
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X DELETE -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/archived/");
+		command.append(repositoryName);
+		System.out.println(command);
+		
+		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
+		
+		return result;
+	}
+	
 }
 

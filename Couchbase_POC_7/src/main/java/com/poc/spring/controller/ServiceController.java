@@ -223,4 +223,26 @@ public class ServiceController {
 		
 		return couchbaseService.deletePlan(request);
 	}
+	
+	@RequestMapping(value="/addNewPlan", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object addNewPlan(HttpServletRequest request) throws Exception {
+		
+		return couchbaseService.addNewPlan(request);
+	}
+
+	@RequestMapping(value="/addNewRepository", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object addNewRepository(HttpServletRequest request) {
+		
+		
+		return couchbaseService.addNewRepository(request);
+	}
+	
+	@RequestMapping(value="/deleteRepository", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object deleteRepository(HttpServletRequest request) {
+		
+		return couchbaseService.deleteRepository(request);
+	}
 }	

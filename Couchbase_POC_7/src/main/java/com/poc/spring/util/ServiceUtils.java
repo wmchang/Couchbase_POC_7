@@ -163,86 +163,15 @@ public class ServiceUtils {
 	        String key = enumber.nextElement().toString();
 	        String[] values = request.getParameterValues(key);
 	        String value=null;
-	        if(values.length <= 1 )
+	        if(values.length <= 1 ) {
 	        	value = values[0];
-	        map.put(key, value);  
+	        	map.put(key, value);  
+	        }
+	        else
+		        map.put(key, values);  
+	        
 	    }
 	    
 	    return map;
 	}
-	
-	// Object(DTO) 끼리 변한 값을 출력함.
-	public static <T> Object getDiffrence(T target1, T target2, Class<T> targetClass) {
-
-		List<String> list = new ArrayList<String>();
-		try {
-			for (PropertyDescriptor pd : Introspector.getBeanInfo(targetClass, Object.class).getPropertyDescriptors()) {
-				Object value1 = pd.getReadMethod().invoke(target1);
-				Object value2 = pd.getReadMethod().invoke(target2);
-
-				if (value1 != null && value2 != null) {
-					if (!value1.equals(value2)) {
-						
-						list.add(pd.getName());
-
-					}
-				}
-
-			}
-			return list;
-		} catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-	}
-//	
-//	public List<String> getJsonDiffrence(JSONObject json1, JSONObject json2) {
-//		
-//		List<String> list = new ArrayList<String>();
-//		
-//		List<String> keyList1 = new ArrayList<String>();
-//		List<String> keyList2 = new ArrayList<String>();
-//		
-//		try {
-//			Iterator<String> i = json1.keySet().iterator();
-//			
-//			while(i.hasNext()) {
-//				String key = i.next();
-//				
-//				keyList1.add(key);
-//			}
-//			Iterator<String> i2 = json2.keySet().iterator();
-//			
-//			while(i2.hasNext()) {
-//				String key = i2.next();
-//				
-//				keyList2.add(key);
-//			}
-//			
-//			System.out.println(keyList1.toString());
-//			System.out.println(keyList2.toString());
-//			
-//			for(String key : keyList1) {
-//				try {
-//					String value1 = (String) json1.get(key);
-//					String value2 = (String) json2.get(key);
-//					
-//					
-//					
-//					if(!value1.equals(value2)) {
-//						list.add(key);
-//					}
-//				}
-//				catch(NullPointerException e) {
-//					continue;
-//				}
-//				
-//			}
-//			
-//			return list;
-//		}catch(Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-//		return null;
-//	}
 }
