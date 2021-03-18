@@ -159,3 +159,25 @@ let _left = (window.screen.width/2)-(300/2);
 		});
 	}
 	
+	
+	
+	// table tr을 클릭하면 토글(더보기)을 보여주는 메소드.
+	// 보여줄 tr의 id에 index 번호를 넣고 매개변수로 index 번호를 주면된다.
+	let lastToggleIndex = '';
+	
+	function trClick(chk){
+		
+		if(lastToggleIndex != chk)
+			$('#tr'+lastToggleIndex).toggle();
+		
+		$('#tr'+chk).toggle();
+		lastToggleIndex = chk;
+		
+		if(!$('#tr'+chk).is(':visible')){
+			lastToggleIndex = '';
+		}
+		
+	}
+
+
+	

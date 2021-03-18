@@ -245,4 +245,18 @@ public class ServiceController {
 		
 		return couchbaseService.deleteRepository(request);
 	}
+	
+	@RequestMapping(value="/archiveRepository", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object archiveRepository(HttpServletRequest request) {
+		
+		return couchbaseService.archiveRepository(request);
+	}
+	
+	@RequestMapping(value="/restoreExcute", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object restoreExcute(HttpServletRequest request) {
+		
+		return couchbaseService.restoreExcute(request);
+	}
 }	

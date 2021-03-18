@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
     
-    	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 	<!-- no_header.jsp -->
 	<c:import url="/WEB-INF/view/common/no_header.jsp">
 	</c:import> 
@@ -21,6 +21,11 @@
 
 	function addRepository(){
 		
+ 		if(!inputCheck($('#repositoryForm'))){
+			alert('모든 항목을 입력해주세요.');
+			return;
+		} 
+		
 		let data = $('#repositoryForm').serialize();
 		
 		$.ajax({
@@ -30,11 +35,16 @@
 			url:"<%=request.getContextPath()%>/addNewRepository",
 			error: function(xhr, status, error){
 				
-				console.log(error);
+				alert(error);
 			},
 			success: function(data) {
 				
-				console.log(data);
+				alert(data);
+				
+				if(data.includes('정상')){
+					window.close();
+					opener.location.reload();
+				}
 			}
 		});
 		
@@ -74,15 +84,12 @@
 				<option value=fileSystem>FileSystem</option>
 			</select>
 		
-			<h5> ID </h5>
-			<input type=text name=archive placeholder="파일 백업 위치">
+			<h5> 상세 위치 </h5>
+			<input type=text name=archive id=archive placeholder="파일 백업 위치">
 		
 		</div>
 		
-		
-		
 		<button type=button class="btn btn-primary" style=float:right onclick="addRepository();">추가</button>
-		
 		
 		<br>
 	</form>

@@ -12,43 +12,11 @@
 
 <script>
 	
-	
-	let lastToggle ='';
-	let lastToggleIndex = '';
-
-
-	$(document).ready(function(){
-		
-		$('#planTable tbody tr').css("cursor","pointer");
-		
-		$('#planTable tbody tr').click(function () {
-			let trIndex = $(this).index();
-			
-			if(trIndex != 0)
-				trIndex /= 2;
-			
-			if(lastToggle != ''){
-				
-				if( Math.floor(trIndex) == lastToggleIndex){
-					if( lastToggle.is(':visible')){
-						lastToggle.toggle();
-						return;
-					}
-				}
-				else if(lastToggle.is(':visible'))
-					lastToggle.toggle();
-			}
-			
-			lastToggle = $('#tr'+trIndex);
-			lastToggle.toggle();
-			lastToggleIndex =  Math.floor(trIndex);
-			
-		});
-
-	});
-	
 	function deletePlan(planName){
 		
+		if(!confirm('삭제하시겠습니까?'))
+			return;
+			
 		let data = 'planName='+planName;
 		
 		$.ajax({
@@ -83,15 +51,17 @@
 		<div class="col-lg-11 mx-auto">
 			<h4> &nbsp; Plans</h4>
 			
-			<button type=button class="btn btn-primary" style=float:right; onclick="addPlan()"> Add Plan </button>
-			<br><br>
 			<c:if test="${empty planList}">
+				<br>
 				<h5> 서버를 연결해주십시오.</h5>
 			</c:if>
 			
 			
 			<c:if test="${not empty planList}">
-				<table class="table table-hover" id=planTable>
+				<button type=button class="btn btn-primary" style=float:right; onclick="addPlan()"> Add Plan </button>
+				<br><br>
+				
+				<table class="table table-hover" id=planTable  style=cursor:pointer>
 					
 					<colgroup>
 						<col width=30%>
@@ -103,14 +73,13 @@
 						<tr>
 							<th> 이름 </th>
 							<th> 서비스 </th>
-							<th> 삭제 </th>
 						</tr>
 					</thead>
 					
 					<tbody>
 						<c:forEach items="${planList }" var="list" varStatus="status">
 							
-							<tr> 
+							<tr onclick='trClick("${status.index }")'> 
 								<td> ${list.name }</td>
 								<td> 
 									<c:choose>
@@ -123,15 +92,13 @@
 									</c:choose>
 								</td>
 								
-								<td>
-									<button type=button class="btn btn-warning" onclick="deletePlan('${list.name}')">Delete</button>
-								</td>
 							</tr>
-							<tr style="display:none;" id="tr${status.index }">
+							<tr style="display:none;" id="tr${status.index }"  onmouseover="this.style.background='white'">
 								<td colspan=4 style=text-align:left;> 
-									&nbsp; 설명 : ${list.description } <br><br>
+									&nbsp; 설명 : ${list.description } 
+									<br><br>
 									
-									<table class="table  table-sm">
+									<table class="table  table-sm"  style=cursor:auto>
 										<tr>
 											<td> 작업 이름 </td>
 											<td> task 유형 </td>
@@ -155,6 +122,9 @@
 											</tr>
 										</c:forEach>
 									</table>
+									
+									<button type=button class="btn btn-warning" onclick="deletePlan('${list.name}')" style=float:right;>Delete</button>
+									
 								
 								</td>
 							</tr> 

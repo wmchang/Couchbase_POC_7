@@ -408,12 +408,17 @@ public class PageController {
 	@RequestMapping(value="/backup/repositoryPage") 
 	public String repositoryPage(Model model) { 
 		
-		Object list = couchbaseService.getRepositoryList();
+		List<Object> list = (List<Object>) couchbaseService.getRepositoryList();
 		
-		model.addAttribute("repoList", list);
+		if(list!=null) {
+			
+			model.addAttribute("activeList", list.get(0));
+			model.addAttribute("archiveList", list.get(1));
+		}
 		
 		return "/backup/repositoryPage"; 
 	}
+
 
 	@RequestMapping(value="/backup/newRepository") 
 	public String newRepository(Model model) { 
@@ -436,6 +441,18 @@ public class PageController {
 		
 
 		return "/backup/newRepository"; 
+	}
+	
+	@RequestMapping(value="/backup/restorePage") 
+	public String restorePage(HttpServletRequest request,Model model) { 
+		
+		model.addAttribute("pointList",couchbaseService.getRestorePoint(request));
+		model.addAttribute("username",couchbaseService.dto.getUsername());
+		model.addAttribute("password",couchbaseService.dto.getPassword());
+		model.addAttribute("state",request.getParameter("state"));
+		model.addAttribute("repositoryName",request.getParameter("repositoryName"));
+		
+		return "/backup/restorePage"; 
 	}
 	
 }

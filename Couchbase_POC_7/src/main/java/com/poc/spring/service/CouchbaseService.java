@@ -90,7 +90,7 @@ public class CouchbaseService {
 	
 	public Cluster cluster;
 	public Bucket bucket=null;
-	ConnectDTO dto;
+	public ConnectDTO dto;
 	ClusterEnvironment env;
 	List<String> hostList = new ArrayList<String>();
 	JSONParser parser = new JSONParser();
@@ -2149,14 +2149,6 @@ public class CouchbaseService {
 			json.put("tasks", taskArray);
 		}
 		
-		try {
-			System.out.println("========================================");
-			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		StringBuilder command = new StringBuilder();
 
 		command.append("curl -v -X POST -u ");
@@ -2169,7 +2161,6 @@ public class CouchbaseService {
 		command.append(map.get("planName"));
 		command.append(" -d ");
 		command.append(json);
-
 		
 		String result = null;
 		
@@ -2177,7 +2168,9 @@ public class CouchbaseService {
 			
 			String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
 			str = str.substring(1,str.length()-1);
-
+			
+			System.out.println(str);
+			
 			result = (String) serviceUtil.curlExcute(str).get("result");
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -2191,7 +2184,6 @@ public class CouchbaseService {
 
 	public Object getRepositoryList() {
 
-		
 		if(dto == null)
 			return null;
 		
@@ -2208,6 +2200,8 @@ public class CouchbaseService {
 		
 		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
 		List<Object> list = new ArrayList<Object>();
+		List<Object> activeList = new ArrayList<Object>();
+		List<Object> archiveList = new ArrayList<Object>();
 		
 		
 		try {
@@ -2250,14 +2244,27 @@ public class CouchbaseService {
 				
 				repoJson.put("nextStatus", "Next "+task+" "+minDay);
 				
-				list.add(repoJson);
+				activeList.add(repoJson);
 			}
 			
+			list.add(activeList);
 			
+			JSONObject archivedJson = (JSONObject) json.get("archived");
+			
+			Iterator<String> archiveIterator = archivedJson.keySet().iterator();
+			
+			while(archiveIterator.hasNext()) {
+				
+				JSONObject archiveJson = (JSONObject)archivedJson.get(archiveIterator.next());
+				archiveList.add(archiveJson);
+				
+			}
+			list.add(archiveList);
 			
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+		
 		
 		return list;
 	}
@@ -2288,24 +2295,22 @@ public class CouchbaseService {
 		command.append(" -d ");
 		command.append(json);
 		
-		String com = "";
+		String cmd = "";
 		
 		try {
-			com = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
+			cmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
 			
-			com = com.substring(1,com.length()-1);
+			cmd = cmd.substring(1,cmd.length()-1);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		System.out.println(com);
+		System.out.println(cmd);
 		
-		String result = serviceUtil.curlExcute(com).get("result").toString();
+		String result = serviceUtil.curlExcute(cmd).get("result").toString();
 		
-		System.out.println(result);
-		
-		return null;
+		return result;
 	}
 	
 	public Object deleteRepository(HttpServletRequest request) {
@@ -2326,6 +2331,193 @@ public class CouchbaseService {
 		System.out.println(command);
 		
 		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
+		
+		return result;
+	}
+	
+	public Object archiveRepository(HttpServletRequest request) {
+		
+		// curl -X POST -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/active/repositoryid/archive 
+		
+		String repositoryName = request.getParameter("repositoryName");
+		
+		JSONObject json = new JSONObject();
+		json.put("id", repositoryName);
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/active/");
+		command.append(repositoryName);
+		command.append("/archive -d ");
+		command.append(json);
+		
+		String cmd = "";
+		
+		try {
+			cmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
+			
+			cmd = cmd.substring(1,cmd.length()-1);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println(cmd);
+		
+		String result = serviceUtil.curlExcute(cmd).get("result").toString();
+		
+		return result;
+	}
+	
+	public Object getRestorePoint(HttpServletRequest request) {
+		
+		String repositoryName = request.getParameter("repositoryName");
+		String state = request.getParameter("state");
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X GET -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/");
+		command.append(state);
+		command.append("/");
+		command.append(repositoryName);
+		System.out.println(command);
+		
+		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
+		
+		List<String> list = new ArrayList<String>();
+		
+		try {
+			
+			JSONObject json = (JSONObject) parser.parse(result);
+			
+			String repoUID = (String) json.get("repo");
+			String archive = (String) json.get("archive");
+			
+			File file = new File(archive+"/"+repoUID);
+			File files[] = file.listFiles();
+			
+			for (int i = 0; i < files.length; i++) {
+				if(files[i].isDirectory()) {
+					list.add(files[i].getName());
+				}
+			}
+			
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Object restoreExcute(HttpServletRequest request) {
+		
+		// curl -X POST -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/active/repoName/restore -d json_parameter
+		
+		Map<String,Object> map = serviceUtil.getRequestToMap(request);
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/");
+		command.append((String)map.get("state"));
+		command.append("/");
+		command.append((String)map.get("repositoryName"));
+		command.append("/restore -d ");
+		
+		String target = (String)map.get("target");
+		if(target.contains("//"))
+			target = target.replace("//", "");
+		
+		JSONObject json = new JSONObject();
+		json.put("target", target);
+		json.put("user", map.get("username"));
+		json.put("password", map.get("password"));
+		json.put("auto_create_buckets", map.get("auto_create_buckets"));
+		json.put("auto_remove_collections", map.get("auto_remove_collections"));
+		json.put("start", map.get("startPoint"));
+		json.put("end", map.get("endPoint"));
+		
+		json.put("force_updates", false);
+		json.put("auto_remove_collections", false);
+		json.put("auto_create_buckets", false);
+		
+		json.put("disable_analytics",  true);
+		json.put("disable_data",  true);
+		json.put("disable_eventing",  true);
+		json.put("disable_ft",  true);
+		json.put("disable_gsi_indexes",  true);
+		json.put("disable_views", true);
+		
+		if(map.get("forceUpdates") != null)
+			json.put("force_updates", true);
+		
+		if(map.get("auto_remove_collections") != null)
+			json.put("auto_remove_collections", true);
+		
+		if(map.get("auto_create_buckets") != null)
+			json.put("auto_create_buckets", true);
+		
+		if(map.get("disable_analytics") != null)
+			json.put("disable_analytics", false);
+		
+		if(map.get("disable_data") != null)
+			json.put("disable_data", false);
+		
+		if(map.get("disable_eventing") != null)
+			json.put("disable_eventing", false);
+		
+		if(map.get("disable_ft") != null)
+			json.put("disable_ft", false);
+		
+		if(map.get("disable_gsi_indexes") != null)
+			json.put("disable_gsi_indexes", false);
+		
+		if(map.get("disable_views") != null)
+			json.put("disable_views", false);
+		
+		if(map.get("filter_keys") != null)
+			json.put("filter_keys", map.get("filterKeys"));
+		
+		if(map.get("disable_views") != null)
+			json.put("filter_values", map.get("filterValues"));
+		
+		if(map.get("map_data") != null)
+			json.put("map_data", map.get("map_data"));
+
+		
+		command.append(json);
+		
+		String cmd = "";
+		
+		try {
+			cmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
+			
+			cmd = cmd.substring(1,cmd.length()-1);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String result = serviceUtil.curlExcute(cmd).get("result").toString();
 		
 		return result;
 	}
