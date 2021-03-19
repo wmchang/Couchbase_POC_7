@@ -38,6 +38,9 @@
 			<a href="<%= request.getContextPath()%>/queryExcutePage"> Äõ¸® </a>
 		</div>
 		<div class="menu">
+			<a href="<%= request.getContextPath()%>/index/indexPage"> ÀÎµ¦½º </a>
+		</div>
+		<div class="menu">
 			<a href="<%= request.getContextPath()%>/fts/ftsPage" > FTS </a>
 		</div>
 		<div class="menu">

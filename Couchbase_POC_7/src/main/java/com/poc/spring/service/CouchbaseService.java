@@ -1286,7 +1286,7 @@ public class CouchbaseService {
 						"query"
 						
 						};
-//      너무 느리고 쓸모없는 정보라 주석처리		
+//      너무 느리고 가공 안된 정보라 주석처리		
 //		List<Map<String,Object>> logList = serviceUtil.logMaker(command, logs);
 		
 //		return logList;
@@ -2202,6 +2202,7 @@ public class CouchbaseService {
 		List<Object> list = new ArrayList<Object>();
 		List<Object> activeList = new ArrayList<Object>();
 		List<Object> archiveList = new ArrayList<Object>();
+		List<Object> importList = new ArrayList<Object>();
 		
 		
 		try {
@@ -2266,6 +2267,19 @@ public class CouchbaseService {
 			}
 			list.add(archiveList);
 			
+			JSONObject importedJson = (JSONObject) json.get("imported");
+			Iterator<String> importedIterator = importedJson.keySet().iterator();
+			
+			while(importedIterator.hasNext()) {
+				
+				JSONObject importJson = (JSONObject)importedJson.get(importedIterator.next());
+				
+				importList.add(importJson);
+			}
+			
+			list.add(importList);
+
+			
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -2279,7 +2293,7 @@ public class CouchbaseService {
 		Map<String,Object> map = serviceUtil.getRequestToMap(request);
 		
 		if(dto == null)
-			return null;
+			return "서버를 연결해주십시오.";
 		
 		JSONObject json = new JSONObject();
 		json.put("plan", map.get("planName"));
@@ -2318,11 +2332,66 @@ public class CouchbaseService {
 		return result;
 	}
 	
+	public Object importRepository(HttpServletRequest request) {
+		
+		if(dto == null)
+			return "서버를 연결해주십시오.";
+		
+		
+		String id = request.getParameter("repositoryName");
+		String archive = request.getParameter("archive");
+		String repo ="";
+		
+		try {
+			repo = archive.substring(archive.lastIndexOf("/"));
+			archive = archive.substring(0,archive.lastIndexOf("/"));
+		}
+		catch(StringIndexOutOfBoundsException e) {
+			repo = archive.substring(archive.lastIndexOf("\\")+1);
+			archive = archive.substring(0,archive.lastIndexOf("\\"));
+		}
+		
+		JSONObject json = new JSONObject();
+		json.put("id", id);
+		json.put("archive", archive);
+		json.put("repo", repo);
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/import");
+		command.append(" -d ");
+		command.append(json);
+		
+		String cmd = "";
+		
+		try {
+			cmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
+			
+			cmd = cmd.substring(1,cmd.length()-1);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println(cmd);
+		
+		String result = serviceUtil.curlExcute(cmd).get("result").toString();
+		
+		return result;
+	}
+	
 	public Object deleteRepository(HttpServletRequest request) {
 		
 		// curl -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/repositoryid -XDELETE
 		
 		String repositoryName = request.getParameter("repositoryName");
+		String state = request.getParameter("state");
 		StringBuilder command = new StringBuilder();
 		
 		command.append("curl -X DELETE -u ");
@@ -2331,8 +2400,11 @@ public class CouchbaseService {
 		command.append(dto.getPassword());
 		command.append(" http://");
 		command.append(dto.getHostname());
-		command.append(":8097/api/v1/cluster/self/repository/archived/");
+		command.append(":8097/api/v1/cluster/self/repository/");
+		command.append(state);
+		command.append("/");
 		command.append(repositoryName);
+
 		System.out.println(command);
 		
 		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
@@ -2344,10 +2416,55 @@ public class CouchbaseService {
 		
 		// curl -X POST http://<backup-node-ip-address-or-domain-name>:8097/api/v1/cluster/self/repository/active/<repository-id>/pause or resume -u Administrator:password
 		
+		String repositoryName = request.getParameter("repositoryName");
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/active/");
+		command.append(repositoryName);
+		command.append("/resume");
+
+		System.out.println(command);
+		
+		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
 		
 		
-		return null;
+		return result;
 	}
+	
+	public Object pauseRepository(HttpServletRequest request) {
+		
+		// curl -X POST http://<backup-node-ip-address-or-domain-name>:8097/api/v1/cluster/self/repository/active/<repository-id>/pause or resume -u Administrator:password
+		
+		String repositoryName = request.getParameter("repositoryName");
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/active/");
+		command.append(repositoryName);
+		command.append("/pause");
+		
+		System.out.println(command);
+		
+		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
+		
+		
+		return result;
+	}
+	
+	
 	public Object archiveRepository(HttpServletRequest request) {
 		
 		// curl -X POST -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/active/repositoryid/archive 
@@ -2525,6 +2642,7 @@ public class CouchbaseService {
 			cmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(command);
 			
 			cmd = cmd.substring(1,cmd.length()-1);
+			System.out.println(cmd);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -235,8 +235,14 @@ public class ServiceController {
 	@ResponseBody
 	public Object addNewRepository(HttpServletRequest request) {
 		
-		
 		return couchbaseService.addNewRepository(request);
+	}
+	
+	@RequestMapping(value="/importRepository", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object importRepository(HttpServletRequest request) {
+		
+		return couchbaseService.importRepository(request);
 	}
 	
 	@RequestMapping(value="/deleteRepository", method=RequestMethod.POST) 
@@ -258,6 +264,13 @@ public class ServiceController {
 	public Object resumeRepository(HttpServletRequest request) {
 		
 		return couchbaseService.resumeRepository(request);
+	}
+	
+	@RequestMapping(value="/pauseRepository", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object pauseRepository(HttpServletRequest request) {
+		
+		return couchbaseService.pauseRepository(request);
 	}
 	
 	@RequestMapping(value="/restoreExcute", method=RequestMethod.POST) 

@@ -18,7 +18,6 @@
 		margin-top:15px;
 	}
 	img{
-	
 		width:15px;
 		height:15px;
 	}

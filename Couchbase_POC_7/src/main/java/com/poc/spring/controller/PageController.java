@@ -415,6 +415,7 @@ public class PageController {
 			
 			model.addAttribute("activeList", list.get(0));
 			model.addAttribute("archiveList", list.get(1));
+			model.addAttribute("importList", list.get(2));
 		}
 		
 		return "/backup/repositoryPage"; 
@@ -444,6 +445,13 @@ public class PageController {
 		return "/backup/newRepository"; 
 	}
 	
+	
+	@RequestMapping(value="/backup/importRepositoryPage") 
+	public String importRepositoryPage() { 
+
+		return "/backup/importRepositoryPage"; 
+	}
+	
 	@RequestMapping(value="/backup/restorePage") 
 	public String restorePage(HttpServletRequest request,Model model) { 
 		
@@ -464,6 +472,12 @@ public class PageController {
 		model.addAttribute("taskList", json);
 		
 		return "/backup/taskHistoryPage"; 
+	}
+	
+	@RequestMapping(value="/index/indexPage") 
+	public String indexPage(HttpServletRequest request) { 
+		
+		return "/index/indexPage"; 
 	}
 	
 }
