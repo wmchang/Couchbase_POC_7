@@ -110,6 +110,69 @@
 
 	}
 	
+	function taskHistory(repoName, state){
+		
+		let data = 'repositoryName='+repoName;
+		data += '&state='+ state;
+		
+		location.href="taskHistoryPage?"+data;
+
+	}
+	
+	function backupExcute(repoName, state){
+		
+		if(!confirm('백업을 실행하시겠습니까?'))
+			return;
+		
+		let full_backup = true;
+		
+		if(!confirm('전체 백업을 수행하시겠습니까? 취소를 누르면 증분 백업을 수행합니다.'))
+			full_backup = false;
+		
+		let data = 'repositoryName='+repoName;
+		data += '&state='+ state;
+		data += '&full_backup='+ full_backup;
+
+		$.ajax({
+			
+			data:data,
+			type:'post',
+			url:"<%=request.getContextPath()%>/backupExcute",
+			error : function(xhr, status, error) {
+				alert(error);
+			},
+			success : function(data){
+				alert(data);
+				
+				if(data.includes('완료'))
+					location.reload();
+			}
+		});
+	}
+	
+	
+	function resumeRepository(repoName, state){
+		
+		let data = 'repositoryName='+repoName;
+		data += '&state='+ state;
+
+		$.ajax({
+			
+			data:data,
+			type:'post',
+			url:"<%=request.getContextPath()%>/resumeRepository",
+			error : function(xhr, status, error) {
+				alert(error);
+			},
+			success : function(data){
+				alert(data);
+				
+				if(data.includes('완료'))
+					location.reload();
+			}
+		});
+	}
+	
 </script>
 </head>
 <body>
@@ -159,24 +222,34 @@
 								<td> ${list.id }</td>
 								<td> <c:if test="${list.bucket.name eq null }"> All Buckets</c:if> ${list.bucket.name }</td>
 								<td> ${list.plan_name }</td>
-								<td> ${list.nextStatus }</td>
+								<td> ${list.nextStatus } <c:if test="${empty list.nextStatus }"> ${list.state }</c:if></td>
 							</tr>
 							
 							<tr style="display:none;" id="tr${status.index }" onmouseover="this.style.background='white'">
 								<td colspan=4 style=text-align:left;> 
 									
-									<table class="table  table-sm" style="cursor:auto;">
+									<table class="table table-sm" style="cursor:auto;">
 										<tr>
 											<td> 저장소 </td>
 											<td> 상태 </td>
+											<td> 백업</td>
+											<td> 작업내용 </td>
 											<td> 복구</td>
 											<td> 보관</td>
+											<c:if test="${list.state eq 'paused' }">
+												<td> 실행 </td>
+											</c:if>
 										</tr>
 										<tr>
 											<td> ${list.archive }</td>
 											<td> ${list.state }</td>
+											<td> <button type=button class="btn btn-success" onclick="backupExcute('${list.id}','${list.state }')">Backup</button> </td>
+											<td> <button type=button class="btn btn-light" onclick="taskHistory('${list.id}','${list.state }')">TaskHistory</button> </td>
 											<td> <button type=button class="btn btn-light" onclick="restoreRepository('${list.id}','${list.state }')"> Restore</button></td>
 											<td> <button type=button class="btn btn-warning" onclick="archiveRepository('${list.id}')">Archive</button></td>
+											<c:if test="${list.state eq 'paused' }">
+												<td><button type=button class="btn btn-primary" onclick="resumeRepository('${list.id}')">Resume</button></td>
+											</c:if>
 										</tr>
 									</table>
 								</td>
@@ -226,13 +299,14 @@
 										<tr>
 											<td> 저장소 </td>
 											<td> 상태 </td>
+											<td> 작업내역 </td>
 											<td> 복구 </td>
 											<td> 삭제 </td>
-											<td>  </td>
 										</tr>
 										<tr>
 											<td> ${list.archive }</td>
 											<td> ${list.state }</td>
+											<td> <button type=button class="btn btn-light" onclick="taskHistory('${list.id}','${list.state }')">taskHistory</button> </td>
 											<td> <button type=button class="btn btn-light" onclick="restoreRepository('${list.id}','${list.state }')"> Restore</button></td>
 											<td> <button type=button class="btn btn-warning" onclick="deleteRepository('${list.id}')">Delete</button> </td>
 										</tr>

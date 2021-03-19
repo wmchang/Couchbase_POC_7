@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -453,6 +454,16 @@ public class PageController {
 		model.addAttribute("repositoryName",request.getParameter("repositoryName"));
 		
 		return "/backup/restorePage"; 
+	}
+	
+	@RequestMapping(value="/backup/taskHistoryPage") 
+	public String taskHistoryPage(HttpServletRequest request,Model model) { 
+		
+		JSONArray json = (JSONArray) couchbaseService.getTaskHistoryList(request);
+		
+		model.addAttribute("taskList", json);
+		
+		return "/backup/taskHistoryPage"; 
 	}
 	
 }

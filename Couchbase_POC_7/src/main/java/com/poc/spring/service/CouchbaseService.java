@@ -2211,38 +2211,43 @@ public class CouchbaseService {
 			
 			Iterator<String> keyIterator = activeJson.keySet().iterator();
 			
+			
 			while(keyIterator.hasNext()) {
 				
 				JSONObject repoJson = (JSONObject) activeJson.get(keyIterator.next());
 				
-				JSONObject dayJson = (JSONObject)repoJson.get("scheduled");
-				Iterator<String> dayItr = dayJson.keySet().iterator();
-				List<String> dayList = new ArrayList<String>();
-				List<String> taskList = new ArrayList<String>();
-
-				while(dayItr.hasNext()) {
-					
-
-					JSONObject runJson = (JSONObject) dayJson.get(dayItr.next());
-					String day = (String)runJson.get("next_run");
-					dayList.add(day);
-					taskList.add((String)runJson.get("task_type"));
-				}
-				
-				String minDay = "";
-				String task = "";
-				
-				minDay = dayList.get(0);
-				
-				for(int i=0;i<dayList.size()-1;i++) {
-					
-					if(minDay.compareTo(dayList.get(i+1)) >= 1) {
-						minDay = dayList.get(i+1);
-						task = taskList.get(i+1);
+				try {
+					JSONObject dayJson = (JSONObject)repoJson.get("scheduled");
+					Iterator<String> dayItr = dayJson.keySet().iterator();
+					List<String> dayList = new ArrayList<String>();
+					List<String> taskList = new ArrayList<String>();
+	
+					while(dayItr.hasNext()) {
+						
+	
+						JSONObject runJson = (JSONObject) dayJson.get(dayItr.next());
+						String day = (String)runJson.get("next_run");
+						dayList.add(day);
+						taskList.add((String)runJson.get("task_type"));
 					}
+					
+					String minDay = "";
+					String task = "";
+					
+					minDay = dayList.get(0);
+					
+					for(int i=0;i<dayList.size()-1;i++) {
+						
+						if(minDay.compareTo(dayList.get(i+1)) >= 1) {
+							minDay = dayList.get(i+1);
+							task = taskList.get(i+1);
+						}
+					}
+					
+					repoJson.put("nextStatus", "Next "+task+" "+minDay);
 				}
-				
-				repoJson.put("nextStatus", "Next "+task+" "+minDay);
+				catch(NullPointerException e) {
+				}
 				
 				activeList.add(repoJson);
 			}
@@ -2335,6 +2340,14 @@ public class CouchbaseService {
 		return result;
 	}
 	
+	public Object resumeRepository(HttpServletRequest request) {
+		
+		// curl -X POST http://<backup-node-ip-address-or-domain-name>:8097/api/v1/cluster/self/repository/active/<repository-id>/pause or resume -u Administrator:password
+		
+		
+		
+		return null;
+	}
 	public Object archiveRepository(HttpServletRequest request) {
 		
 		// curl -X POST -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/active/repositoryid/archive 
@@ -2522,5 +2535,73 @@ public class CouchbaseService {
 		return result;
 	}
 	
+	public Object getTaskHistoryList(HttpServletRequest request) {
+		
+		
+		String repositoryName = request.getParameter("repositoryName");
+		String state = request.getParameter("state");
+		
+		// curl -X GET -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/one_back/taskHistory
+		StringBuilder command = new StringBuilder();
+		
+		if(state.equals("paused"))
+			state = "active";
+		
+		command.append("curl -X GET -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/");
+		command.append(state);
+		command.append("/");
+		command.append(repositoryName);
+		command.append("/taskHistory");
+		System.out.println(command);
+		
+		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
+		
+		JSONArray json = new JSONArray();
+		
+		try {
+			json = (JSONArray)parser.parse(result);
+			
+		} catch (ParseException | ClassCastException e) {
+			return null;
+		}
+		
+		
+		return json;
+	}
+	
+	public Object backupExcute(HttpServletRequest request) {
+		
+		String repositoryName = request.getParameter("repositoryName");
+		String state = request.getParameter("state");
+		
+		// curl -X GET -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/one_back/taskHistory
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X POST -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":8097/api/v1/cluster/self/repository/");
+		command.append(state);
+		command.append("/");
+		command.append(repositoryName);
+		command.append("/backup");
+		command.append(" -d {\\\"full_backup\\\":");
+		command.append(Boolean.valueOf(request.getParameter("full_backup")));
+		command.append("}");
+		System.out.println(command);
+		
+		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
+		
+		return result;
+	}
 }
 

@@ -253,10 +253,24 @@ public class ServiceController {
 		return couchbaseService.archiveRepository(request);
 	}
 	
+	@RequestMapping(value="/resumeRepository", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object resumeRepository(HttpServletRequest request) {
+		
+		return couchbaseService.resumeRepository(request);
+	}
+	
 	@RequestMapping(value="/restoreExcute", method=RequestMethod.POST) 
 	@ResponseBody
 	public Object restoreExcute(HttpServletRequest request) {
 		
 		return couchbaseService.restoreExcute(request);
+	}
+	
+	@RequestMapping(value="/backupExcute", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object backupExcute(HttpServletRequest request) {
+		
+		return couchbaseService.backupExcute(request);
 	}
 }	
