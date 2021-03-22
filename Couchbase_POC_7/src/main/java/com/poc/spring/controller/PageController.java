@@ -475,7 +475,9 @@ public class PageController {
 	}
 	
 	@RequestMapping(value="/index/indexPage") 
-	public String indexPage(HttpServletRequest request) { 
+	public String indexPage(HttpServletRequest request,Model model) { 
+		
+		model.addAttribute("indexList", couchbaseService.getIndexList(request));
 		
 		return "/index/indexPage"; 
 	}

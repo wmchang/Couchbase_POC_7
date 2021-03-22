@@ -210,11 +210,11 @@
 	<div class=row>
 		<div class="col-lg-11 mx-auto">
 			<h4> &nbsp; Repositories </h4>
-			<c:if test="${empty activeList and empty archiveList}">
-			
+			<br>
 			<button type=button class="btn btn-primary" style=float:right;margin-left:10px; onclick="addRepository()"> Add Repository </button>
 			<button type=button class="btn btn-primary" style=float:right; onclick="importRepository()"> import Repository </button>
-				<br>
+			<c:if test="${empty activeList and empty archiveList and empty importList}">
+			
 				<h5> 서버를 연결해주십시오.</h5>
 			</c:if>
 			
@@ -254,7 +254,7 @@
 								<td> ${list.nextStatus } <c:if test="${empty list.nextStatus }"> ${list.state }</c:if></td>
 							</tr>
 							
-							<tr style="display:none;" id="tr${status.index }" onmouseover="this.style.background='white'">
+							<tr class=innerTR id="tr${status.index }">
 								<td colspan=4 style=text-align:left;> 
 									
 									<table class="table table-sm" style="cursor:auto;">
@@ -327,7 +327,7 @@
 								<td> ${list.state }</td>
 							</tr>
 							
-							<tr style="display:none;" id="tr${status.index + activeList.size() }" onmouseover="this.style.background='white'">
+							<tr class=innerTR id="tr${status.index + activeList.size() }" >
 								<td colspan=4 style=text-align:left;> 
 									
 									<table class="table  table-sm" style=cursor:auto>
@@ -385,7 +385,7 @@
 								<td> ${list.state }</td>
 							</tr>
 							
-							<tr style="display:none;" id="tr${status.index + activeList.size() + archiveList.size() }" onmouseover="this.style.background='white'">
+							<tr class=innerTR id="tr${status.index + activeList.size() + archiveList.size() }" >
 								<td colspan=4 style=text-align:left;> 
 									
 									<table class="table  table-sm" style=cursor:auto>

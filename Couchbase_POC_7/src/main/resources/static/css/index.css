@@ -150,3 +150,12 @@ select{
   	flex-grow: 1;
     align-items: center;
 }
+
+.innerTR {
+	display:none;
+	margin:10px 5px 10px 5px;
+}
+.innerTR:hover td{
+	background-color:white;
+	cursor:auto;
+}

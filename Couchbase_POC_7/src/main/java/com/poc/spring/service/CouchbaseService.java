@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
@@ -79,6 +80,7 @@ import com.poc.spring.util.ServiceUtils;
 
 import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 
+@SuppressWarnings("unchecked")
 @Service
 public class CouchbaseService {
 	
@@ -99,7 +101,6 @@ public class CouchbaseService {
 	public String connectionData(HttpServletRequest request) throws Exception {
 		
 		Map<String,Object> map = serviceUtil.getRequestToMap(request);
-
 		try {
 
 			ServiceType[] serviceType = null;
@@ -241,9 +242,9 @@ public class CouchbaseService {
 				nodeMap.put("hostname", node.get("hostname"));
 				nodeMap.put("service", serviceList);
 				nodeMap.put("cpu", serviceUtil.doubleFormat(systemStats.get("cpu_utilization_rate")));
-				nodeMap.put("swap", serviceUtil.byteToMb(systemStats.get("swap_total")));
-				nodeMap.put("ram_total", serviceUtil.byteToMb(systemStats.get("mem_total")));
-				nodeMap.put("ram_free", serviceUtil.byteToMb(systemStats.get("mem_free")));
+				nodeMap.put("swap", serviceUtil.byteToMB(systemStats.get("swap_total")));
+				nodeMap.put("ram_total", serviceUtil.byteToMB(systemStats.get("mem_total")));
+				nodeMap.put("ram_free", serviceUtil.byteToMB(systemStats.get("mem_free")));
 				
 				list.add(nodeMap);
 			
@@ -422,10 +423,10 @@ public class CouchbaseService {
 				bucketMap.put("name", jsonObj.get("name"));
 				bucketMap.put("bucketType", jsonObj.get("bucketType").equals("membase") ? "couchbase" : jsonObj.get("bucketType"));
 				bucketMap.put("itemCount", statObj.get("itemCount"));
-				bucketMap.put("memUsed", serviceUtil.byteToMb(statObj.get("memUsed")));
-				bucketMap.put("diskUsed", serviceUtil.byteToMb(statObj.get("diskUsed")));
+				bucketMap.put("memUsed", serviceUtil.byteToMB(statObj.get("memUsed")));
+				bucketMap.put("diskUsed", serviceUtil.byteToMB(statObj.get("diskUsed")));
 				bucketMap.put("quotaPercentUsed", serviceUtil.doubleFormat(statObj.get("quotaPercentUsed")));
-				bucketMap.put("ram", serviceUtil.byteToMb(quotaObj.get("ram")));
+				bucketMap.put("ram", serviceUtil.byteToMB(quotaObj.get("ram")));
 				
 				list.add(bucketMap);
 			}
@@ -978,8 +979,10 @@ public class CouchbaseService {
 				
 			}
 			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		} catch (NullPointerException e) {
+			return null;
+		}
+		catch(ParseException e) {
 			e.printStackTrace();
 		}
 		
@@ -1672,7 +1675,6 @@ public class CouchbaseService {
 		return "ERROR";
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Object createEventFunction(HttpServletRequest request) {
 		
 		Map<String,Object> map = serviceUtil.getRequestToMap(request);
@@ -2024,7 +2026,6 @@ public class CouchbaseService {
 		return result;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Object addNewPlan(HttpServletRequest request) {
 		
 		Map<String,Object> map = serviceUtil.getRequestToMap(request);
@@ -2464,7 +2465,6 @@ public class CouchbaseService {
 		return result;
 	}
 	
-	
 	public Object archiveRepository(HttpServletRequest request) {
 		
 		// curl -X POST -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/active/repositoryid/archive 
@@ -2552,7 +2552,6 @@ public class CouchbaseService {
 		return list;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Object restoreExcute(HttpServletRequest request) {
 		
 		// curl -X POST -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/active/repoName/restore -d json_parameter
@@ -2721,5 +2720,110 @@ public class CouchbaseService {
 		
 		return result;
 	}
+
+	public Object getIndexList(HttpServletRequest request) {
+		
+		// curl -X GET -u Administrator:admin123 "http://localhost:9102/api/v1/stats?pretty=true"
+		
+		if(dto == null)
+			return null;
+		
+		String statement = "SELECT * FROM system:indexes";
+		
+		QueryResult queryResult = cluster.query(statement);
+		
+		List<JsonObject> jsonList = queryResult.rowsAsObject();
+		
+		JsonObject indexDetail = JsonObject.create();
+		
+		for(JsonObject json : jsonList) {
+			
+			JsonObject json1 = (JsonObject) json.get("indexes");
+			indexDetail.put((String) json1.get("name"), json1);
+		}
+		
+		List<Object> list = new ArrayList<Object>();
+		
+		StringBuilder command = new StringBuilder();
+		
+		command.append("curl -X GET -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":9102/api/v1/stats?pretty=true");
+		System.out.println(command);
+		
+		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
+		
+		
+		try {
+			JSONObject json = (JSONObject)parser.parse(result);
+			
+			Iterator<String> keyIter = json.keySet().iterator();
+			
+			JSONObject indexerJson = new JSONObject();
+			
+			while(keyIter.hasNext()) {
+				
+				String indexName = keyIter.next();
+				JSONObject indexJson = (JSONObject) json.get(indexName);
+				
+				if(indexName.equals("indexer")) {
+					indexerJson = indexJson;
+					continue;
+				}
+				
+				String name = indexName.substring(indexName.lastIndexOf(":")+1);
+				String keyspace = indexName.substring(0,indexName.lastIndexOf(":"));
+				
+				if(keyspace.contains(":")) 
+					keyspace = keyspace.replaceAll(":", ".");
+				else
+					keyspace += "._default._default";
+				
+				indexJson.put("name",name);
+				indexJson.put("keyspace", keyspace);
+				
+				String data_size =serviceUtil.byteToKB(indexJson.get("data_size"));
+				indexJson.put("data_size", data_size);
+				
+				JsonObject detailJson = (JsonObject)indexDetail.get(name);
+				
+				indexJson.put("is_primary", detailJson.get("is_primary"));
+				indexJson.put("index_key", detailJson.get("index_key"));
+				indexJson.put("using", detailJson.get("using"));
+				indexJson.put("state", detailJson.get("state"));
+				
+				list.add(indexJson);
+
+			}
+			
+			String memory_quota = serviceUtil.byteToMB(indexerJson.get("memory_quota"));
+			String memory_total_storage = serviceUtil.byteToMB(indexerJson.get("memory_total_storage"));
+			String memory_used = serviceUtil.byteToMB(indexerJson.get("memory_used"));
+			
+			indexerJson.put("memory_quota", memory_quota);
+			indexerJson.put("memory_total_storage", memory_total_storage);
+			indexerJson.put("memory_used", memory_used);
+			
+			double a = Double.parseDouble(memory_quota);
+			double b = Double.parseDouble(memory_used);
+			DecimalFormat df = new DecimalFormat("##0.0");
+			
+			String memory_percent = df.format(b/a*100);
+			indexerJson.put("memory_percent", memory_percent);
+			
+			list.add(indexerJson);
+			
+			
+		}catch(ParseException e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
 }
+
 

@@ -93,7 +93,7 @@
 								</td>
 								
 							</tr>
-							<tr style="display:none;" id="tr${status.index }"  onmouseover="this.style.background='white'">
+							<tr class=innerTR id="tr${status.index }" >
 								<td colspan=4 style=text-align:left;> 
 									&nbsp; 설명 : ${list.description } 
 									<br><br>

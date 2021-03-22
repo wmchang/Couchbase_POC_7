@@ -23,7 +23,18 @@
 		}
 		
 		var data = $("#queryForm").serializeArray();
-	
+		
+		
+		$('#queryResult').val('Please waiting.');
+		
+		let waitTime = setInterval( function(){
+			$('#queryResult').val($('#queryResult').val()+'.');
+			
+			if($('#queryResult').val().includes('....'))
+				$('#queryResult').val('Please waiting.');
+			
+		}, 500);
+		
 		$.ajax({
 				type : "post",
 				url : "<%= request.getContextPath()%>/getQueryResult",
@@ -43,6 +54,7 @@
 						let pretty = JSON.stringify(obj, null, 4);
 						document.getElementById('queryResult').value = pretty;
 					}
+					clearTimeout(waitTime);
 				}
 			});
 	}

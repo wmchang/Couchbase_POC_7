@@ -78,7 +78,7 @@ public class ServiceUtils {
 	    return line;
 	}
 	
-	public String byteToMb(Object object) {
+	public String byteToMB(Object object) {
 		DecimalFormat df = new DecimalFormat("##0.0");
 		
 		String result;
@@ -89,6 +89,21 @@ public class ServiceUtils {
 		}
 		
 		result = df.format(((long)object)*10/1024/1024*0.1);
+		
+		return result;
+	}
+	
+	public String byteToKB(Object object) {
+		DecimalFormat df = new DecimalFormat("##0.0");
+		
+		String result;
+		
+		if(object == null) {
+			result = "0.0";
+			return result;
+		}
+		
+		result = df.format(((long)object)*10/1024*0.1);
 		
 		return result;
 	}
