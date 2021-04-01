@@ -74,6 +74,8 @@
 			
 			<h5> Couchbase Bucket</h5>
 			<select name=bucketName>
+				<option value=""> All Buckets </option>
+				
 				<c:forEach items="${bucketList }" var="list">
 					<option value="${list }"> ${list } </option>
 				</c:forEach>

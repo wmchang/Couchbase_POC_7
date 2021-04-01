@@ -178,6 +178,31 @@ let _left = (window.screen.width/2)-(300/2);
 		}
 		
 	}
+	
+	let waitTime;
+	
+	function waitToast(cmd) {
+	    const toast = document.getElementById("toast");
+	
+	    if(toast.classList.contains("reveal") && cmd == 'exit'){
+			clearTimeout(waitTime);
+			document.getElementById("toast").classList.remove("reveal");
+			return;
+		}
+
+	    toast.classList.add("reveal");
+	    toast.innerText = "please Wait."
+
+		waitTime = setInterval( function(){
+			toast.innerText = (toast.innerText+'.');
+			
+			if( toast.innerText.includes('.....'))
+				toast.innerText = "please Wait.";
+				
+			console.log('gd');
+			
+		}, 700);
+	}
 
 
 	

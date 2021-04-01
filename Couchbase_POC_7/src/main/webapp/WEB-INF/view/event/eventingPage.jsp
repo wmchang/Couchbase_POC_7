@@ -133,6 +133,12 @@
 				
 					${message }
 				</c:if>
+				
+				<c:if test="${empty message }">
+					<div>
+						<button class="btn btn-primary" style=float:right; onclick="addFunction();">Add Function</button>
+					</div>
+				</c:if>
 			
 			</div>
 		</div>

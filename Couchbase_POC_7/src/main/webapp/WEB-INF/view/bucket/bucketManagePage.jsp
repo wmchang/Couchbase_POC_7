@@ -100,8 +100,8 @@
 								<td>${list.name }</td>
 								<td>${list.bucketType }</td>
 								<td>${list.itemCount }</td>
-								<td>${list.quotaPercentUsed }% (${list.memUsed }MB / ${list.ram }MB)</td>
-								<td>${list.diskUsed }MB </td>
+								<td>${list.quotaPercentUsed }% (${list.memUsed } / ${list.ram })</td>
+								<td>${list.diskUsed } </td>
 								<td><a href="#" id=${list.name } onclick="getScopeCollection(this);">Scope</a> </td>
 								<td><button type="button" class="btn btn-warning float-right" id=${list.name } onclick="dropBucketNow(this);">제거</button> </td>
 								

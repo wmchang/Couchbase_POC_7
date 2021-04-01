@@ -78,32 +78,58 @@ public class ServiceUtils {
 	    return line;
 	}
 	
-	public String byteToMB(Object object) {
+	public String byteToMBKB(Object object) {
 		DecimalFormat df = new DecimalFormat("##0.0");
 		
-		String result;
+		String result = null;
 		
 		if(object == null) {
 			result = "0.0";
 			return result;
 		}
 		
-		result = df.format(((long)object)*10/1024/1024*0.1);
+		long num = (long)object;
+		String str = Long.toString(num);
+		
+		result = df.format(num*10/0.1);
+		
+		if(str.length() >= 3) // KB
+			result = df.format(num*10/1024*0.1)+"KB";
+		
+		if(str.length() >= 7) // MB
+			result = df.format(num*10/1024/1024*0.1)+"MB";
+		
+		if(str.length() >= 10) // MB
+			result = df.format(num*10/1024/1024/1024*0.1)+"GB";
+			
 		
 		return result;
 	}
 	
-	public String byteToKB(Object object) {
+	public String byteTo(Object object) {
 		DecimalFormat df = new DecimalFormat("##0.0");
 		
-		String result;
+		String result = null;
 		
 		if(object == null) {
 			result = "0.0";
 			return result;
 		}
 		
-		result = df.format(((long)object)*10/1024*0.1);
+		long num = (long)object;
+		String str = Long.toString(num);
+		
+		result = df.format(num*10/0.1);
+		
+		if(str.length() >= 3) // KB
+			result = df.format(num*10/1024*0.1);
+		
+		if(str.length() >= 7) // MB
+			result = df.format(num*10/1024/1024*0.1);
+		
+		if(str.length() >= 10) // MB
+			result = df.format(num*10/1024/1024/1024*0.1);
+		
 		
 		return result;
 	}

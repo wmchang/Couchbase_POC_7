@@ -23,6 +23,9 @@
 	</div>
 	<div id=header-tab>
 		<div class="menu">
+			<a href="<%= request.getContextPath()%>/dashboard"> 대시보드 </a>
+		</div>
+		<div class="menu">
 			<a href="<%= request.getContextPath()%>/"> 서버 연결 설정 </a>
 		</div>
 		<div class="menu">

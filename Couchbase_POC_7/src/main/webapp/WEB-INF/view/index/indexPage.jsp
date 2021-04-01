@@ -7,6 +7,68 @@
 <head>
 <meta charset="EUC-KR">
 <title>Insert title here</title>
+<script>
+	
+
+	function getIndexList(){
+		
+		setTimeout(function (){
+			
+			if(document.getElementById("bucket").value=='-Select Bucket-')
+				return;
+			
+			let size = $('#bucketScope')[0].length;
+			
+			$('#scopeListDiv').html('');
+			for(var i=0;i<size;i++){
+				
+				let scopes = $('#bucketScope')[0][i].value;
+				$('#scopeListDiv').append('<input type=checkbox name=scopeList value='+scopes+' checked style=display:none;>');
+			}
+			
+			$('#indexForm').submit();
+			
+		},100);
+		
+	}
+	
+	function deleteIndex(primary, name, keyspace){
+		
+		let data = "name="+name;
+		data += "&keyspace="+keyspace;
+		data += "&primary="+primary;
+		
+		waitToast('go');
+		
+ 		$.ajax({
+ 			
+			type : "post",
+			url : "<%= request.getContextPath()%>/deleteIndex",
+			data : data,
+			error : function(xhr, status, error) {
+				alert(error);
+			},
+			success : function(data) {
+				waitToast('exit');
+				
+				if(data.length == 0){
+					alert('삭제가 완료되었습니다.');
+					location.reload();
+				}
+				else
+					alert(data);
+			}	
+		}); 
+		
+	}
+	
+	function newIndex(){
+		
+		window.open('newIndexPage','팝업스','width=700, height=600, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no');
+
+	}
+
+</script>
 </head>
 <body>
 
@@ -22,8 +84,34 @@
 			</c:if>
 			
 			<c:if test="${not empty indexList }">
-				<span style=font-size:13px;>&nbsp; Index Service Total Ram :  ${indexList[indexList.size()-1].memory_quota}MB</span><br>
+				<span style=font-size:13px;>&nbsp; Index Service Total Ram :  ${indexList[indexList.size()-1].memory_quota}</span><br>
 				<span style=font-size:13px;>&nbsp; Index Service RAM 사용량 : ${indexList[indexList.size()-1].memory_percent}% </span>
+				<br>
+				
+				<button class="btn btn-success" onclick="newIndex()" style=float:right;>Add Index</button>
+				<button class="btn btn-light" onclick="location.href='<%= request.getContextPath()%>/index/indexPage'" style=float:right;margin-right:20px;>All Index</button>
+				<br><Br>
+				<div style=float:right; id=bucketScopeDiv>
+					<form id=indexForm>
+						<select name=bucket onchange="bucketChange(this);" id=bucket>
+							<option value='-Select Bucket-'>-Select Bucket-</option>
+						
+							<c:forEach items="${bucketList }" var="list">
+									<option value=${list } <c:if test="${list eq bucketName}">selected</c:if>>${list }</option>
+							</c:forEach>
+						</select>
+						.
+						<select name=bucketScope onchange="scopeChange(this); getIndexList();" id=bucketScope>
+							
+							<c:forEach items="${scopeList }" var="list">
+									<option value=${list } <c:if test="${list eq scopeName}">selected</c:if> >${list }</option>
+							</c:forEach>
+						</select>
+						
+						<div id=scopeListDiv>
+						</div>
+					</form>
+				</div>
 				<br><br>
 			
 				<table class="table table-hover" id=repoTable style="cursor:pointer;">
@@ -46,7 +134,7 @@
 						</tr>
 					</thead>
 					
-						<tbody>
+						<tbody id=indexTbody>
 					
 							<c:forEach items="${indexList }" var="list" varStatus="status">
 								
@@ -54,7 +142,7 @@
 									<tr onclick='trClick("${status.index }")'> 
 										<td> ${list.name }</td>
 										<td> ${list.items_count }</td>
-										<td> ${list.data_size }KB</td>
+										<td> ${list.data_size }</td>
 										<td> ${list.keyspace }</td>
 										<td> ${list.state }</td>
 									</tr>
@@ -62,7 +150,7 @@
 									
 									
 									<tr class=innerTR id="tr${status.index  }" >
-										<td colspan=4 style=text-align:left;>정의: CREATE <c:if test="${list.is_primary eq true }" >PRIMARY </c:if>INDEX `${list.name }` ON `${list.keyspace }` 
+										<td colspan=5 style=text-align:left;>정의: CREATE <c:if test="${list.is_primary eq true }" >PRIMARY </c:if>INDEX `${list.name }` ON `${list.keyspace }` 
 											<c:if test="${list.index_key.size() > 0}"> 
 											
 												(
@@ -88,12 +176,10 @@
 											</c:if>
 											<br>
 											Storage Mode : ${list.using }
+											<br>
+											<button class="btn btn-warning" onclick="deleteIndex('${list.is_primary }','${list.name}','${list.keyspace }');" style="float:right;">Drop Index</button>
 										</td>
-									
 									</tr>
-									
-									
-									
 								</c:if>
 							</c:forEach>
 						</tbody>
@@ -107,6 +193,7 @@
 	</div>
 </div>
 
+<div id=toast></div>
 
 
 </body>

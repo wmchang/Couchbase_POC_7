@@ -144,7 +144,7 @@
 								<td>${list.hostname }</td>
 								<td style=width:100px;>${list.service }</td>
 								<td>${list.cpu }%</td>
-								<td>${list.ram_free}MB / ${list.ram_total }MB</td>
+								<td>${list.ram_free} / ${list.ram_total }</td>
 								<td>${list.swap }</td>
 							</tr>
 							

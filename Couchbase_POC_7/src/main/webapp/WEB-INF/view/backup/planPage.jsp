@@ -109,7 +109,7 @@
 											<tr>
 												<td>${tasks.name } </td>
 												<td>${tasks.task_type } </td>
-												<td>매 ${tasks.schedule.frequency } ${tasks.schedule.period } ${tasks.schedule.time }시 마다 </td>
+												<td>매 ${tasks.schedule.frequency } ${tasks.schedule.period } ${tasks.schedule.time } 마다 </td>
 												<td><c:choose>
 														<c:when test = "${tasks.full_backup eq 'true'}">
 															Full-backup

@@ -52,7 +52,6 @@
 	function buttonChange(chk){
 		
 		$('input[id='+chk.id+']').parent().css('background-color','#007bff');
-		
 		$(chk).parent().css('background-color','purple');
 		
 	}

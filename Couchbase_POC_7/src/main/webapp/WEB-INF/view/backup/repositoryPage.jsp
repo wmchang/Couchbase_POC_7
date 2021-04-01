@@ -11,41 +11,6 @@
 <script>
 
 
-/*  	$(document).ready(function(){
-		
-		$('#repoTable tbody tr').css("cursor","pointer");
-		
-		$('#repoTable tbody tr').click(function () {
-			let trIndex = $(this).index();
-			
-			
-			console.log(trIndex);
-			
-			
-			
- 			if(trIndex != 0)
-				trIndex /= 2;
-			
-			if(lastToggle != ''){
-				
-				if( Math.floor(trIndex) == lastToggleIndex){
-					if( lastToggle.is(':visible')){
-						lastToggle.toggle();
-						return;
-					}
-				}
-				else if(lastToggle.is(':visible'))
-					lastToggle.toggle();
-			}
-			
-			lastToggle = $('#tr'+trIndex);
-			lastToggle.toggle();
-			lastToggleIndex =  Math.floor(trIndex); 
-			
-		});
-	
-	});  */
-	
 	function addRepository(){
 		
 		window.open('newRepository','팝업스','width=700, height=600, left='+_left+', top='+_top+', menubar=no, status=no, toolbar=no');

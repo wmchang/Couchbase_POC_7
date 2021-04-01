@@ -6,30 +6,23 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.security.KeyStore;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.logging.log4j.util.Strings;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -77,8 +70,6 @@ import com.poc.spring.dto.ConnectDTO;
 import com.poc.spring.dto.SettingDTO;
 import com.poc.spring.dto.querySettingsDTO;
 import com.poc.spring.util.ServiceUtils;
-
-import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 
 @SuppressWarnings("unchecked")
 @Service
@@ -242,9 +233,9 @@ public class CouchbaseService {
 				nodeMap.put("hostname", node.get("hostname"));
 				nodeMap.put("service", serviceList);
 				nodeMap.put("cpu", serviceUtil.doubleFormat(systemStats.get("cpu_utilization_rate")));
-				nodeMap.put("swap", serviceUtil.byteToMB(systemStats.get("swap_total")));
-				nodeMap.put("ram_total", serviceUtil.byteToMB(systemStats.get("mem_total")));
-				nodeMap.put("ram_free", serviceUtil.byteToMB(systemStats.get("mem_free")));
+				nodeMap.put("swap", serviceUtil.byteToMBKB(systemStats.get("swap_total")));
+				nodeMap.put("ram_total", serviceUtil.byteToMBKB(systemStats.get("mem_total")));
+				nodeMap.put("ram_free", serviceUtil.byteToMBKB(systemStats.get("mem_free")));
 				
 				list.add(nodeMap);
 			
@@ -423,10 +414,10 @@ public class CouchbaseService {
 				bucketMap.put("name", jsonObj.get("name"));
 				bucketMap.put("bucketType", jsonObj.get("bucketType").equals("membase") ? "couchbase" : jsonObj.get("bucketType"));
 				bucketMap.put("itemCount", statObj.get("itemCount"));
-				bucketMap.put("memUsed", serviceUtil.byteToMB(statObj.get("memUsed")));
-				bucketMap.put("diskUsed", serviceUtil.byteToMB(statObj.get("diskUsed")));
+				bucketMap.put("memUsed", serviceUtil.byteToMBKB(statObj.get("memUsed")));
+				bucketMap.put("diskUsed", serviceUtil.byteToMBKB(statObj.get("diskUsed")));
 				bucketMap.put("quotaPercentUsed", serviceUtil.doubleFormat(statObj.get("quotaPercentUsed")));
-				bucketMap.put("ram", serviceUtil.byteToMB(quotaObj.get("ram")));
+				bucketMap.put("ram", serviceUtil.byteToMBKB(quotaObj.get("ram")));
 				
 				list.add(bucketMap);
 			}
@@ -1647,6 +1638,7 @@ public class CouchbaseService {
 		command.append("@");
 		command.append(dto.getHostname());
 		command.append(":8096/api/v1/functions");
+		System.out.println(command.toString());
 		
 		String result = (String) serviceUtil.curlExcute(command.toString()).get("result");
 		
@@ -2510,6 +2502,9 @@ public class CouchbaseService {
 		String repositoryName = request.getParameter("repositoryName");
 		String state = request.getParameter("state");
 		
+		if(state.equals("paused"))
+			state = "active";
+		
 		StringBuilder command = new StringBuilder();
 		
 		command.append("curl -X GET -u ");
@@ -2655,15 +2650,19 @@ public class CouchbaseService {
 	public Object getTaskHistoryList(HttpServletRequest request) {
 		
 		
+		// backup 정보
+		// curl -X GET -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/imported/one_back/info
+		
+		// Task(작업) 정보
+		// curl -X GET -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/one_back/taskHistory
+		
+		
 		String repositoryName = request.getParameter("repositoryName");
 		String state = request.getParameter("state");
-		
-		// curl -X GET -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/one_back/taskHistory
-		StringBuilder command = new StringBuilder();
-		
 		if(state.equals("paused"))
 			state = "active";
-		
+
+		StringBuilder command = new StringBuilder();
 		command.append("curl -X GET -u ");
 		command.append(dto.getUsername());
 		command.append(":");
@@ -2677,25 +2676,63 @@ public class CouchbaseService {
 		command.append("/taskHistory");
 		System.out.println(command);
 		
+		
+		StringBuilder command2 = new StringBuilder();
+		command2.append("curl -X GET -u ");
+		command2.append(dto.getUsername());
+		command2.append(":");
+		command2.append(dto.getPassword());
+		command2.append(" http://");
+		command2.append(dto.getHostname());
+		command2.append(":8097/api/v1/cluster/self/repository/");
+		command2.append(state);
+		command2.append("/");
+		command2.append(repositoryName);
+		command2.append("/info");
+		System.out.println(command2);
+		
+		
 		String result = serviceUtil.curlExcute(command.toString()).get("result").toString();
+		String result2 = serviceUtil.curlExcute(command2.toString()).get("result").toString();
 		
 		JSONArray json = new JSONArray();
+		JSONObject json2 = new JSONObject();
+		List<Object> list = new ArrayList<Object>();
 		
 		try {
 			json = (JSONArray)parser.parse(result);
+			json2 = (JSONObject)parser.parse(result2);
+			
+			JSONArray obj = (JSONArray) json2.get("backups");
+			
+			for(Object backups : obj) {
+				JSONObject backupsJson = (JSONObject)backups;
+				
+				Long size = (Long)backupsJson.get("size");
+				String sizeMB = (String)serviceUtil.byteToMBKB(size);
+				
+				backupsJson.put("size", sizeMB);
+			}
+			
+			list.add(json);
+			list.add(json2);
 			
 		} catch (ParseException | ClassCastException e) {
+			
+			e.printStackTrace();
 			return null;
 		}
 		
-		
-		return json;
+		return list;
 	}
 	
 	public Object backupExcute(HttpServletRequest request) {
 		
 		String repositoryName = request.getParameter("repositoryName");
 		String state = request.getParameter("state");
+		
+		if(state.equals("paused"))
+			state = "active";
 		
 		// curl -X GET -u Administrator:admin123 http://localhost:8097/api/v1/cluster/self/repository/archived/one_back/taskHistory
 		StringBuilder command = new StringBuilder();
@@ -2765,6 +2802,14 @@ public class CouchbaseService {
 			
 			JSONObject indexerJson = new JSONObject();
 			
+			String requestName = request.getParameter("bucket");
+			String scopeName = request.getParameter("bucketScope");
+			String[] scopeList = request.getParameterValues("scopeList");
+			
+			if(scopeList != null) {
+				
+			}
+			
 			while(keyIter.hasNext()) {
 				
 				String indexName = keyIter.next();
@@ -2786,7 +2831,7 @@ public class CouchbaseService {
 				indexJson.put("name",name);
 				indexJson.put("keyspace", keyspace);
 				
-				String data_size =serviceUtil.byteToKB(indexJson.get("data_size"));
+				String data_size =serviceUtil.byteToMBKB(indexJson.get("data_size"));
 				indexJson.put("data_size", data_size);
 				
 				JsonObject detailJson = (JsonObject)indexDetail.get(name);
@@ -2796,20 +2841,28 @@ public class CouchbaseService {
 				indexJson.put("using", detailJson.get("using"));
 				indexJson.put("state", detailJson.get("state"));
 				
-				list.add(indexJson);
-
+				if(requestName != null) {
+					if(requestName.equals(keyspace.substring(0,keyspace.indexOf(".")))) {
+						if(scopeName.equals(keyspace.substring(keyspace.indexOf(".")+1,keyspace.lastIndexOf(".")))) {
+							list.add(indexJson);
+						}
+					}
+				}
+				else {
+					list.add(indexJson);
+				}
 			}
 			
-			String memory_quota = serviceUtil.byteToMB(indexerJson.get("memory_quota"));
-			String memory_total_storage = serviceUtil.byteToMB(indexerJson.get("memory_total_storage"));
-			String memory_used = serviceUtil.byteToMB(indexerJson.get("memory_used"));
+			String memory_quota = serviceUtil.byteToMBKB(indexerJson.get("memory_quota"));
+			String memory_total_storage = serviceUtil.byteToMBKB(indexerJson.get("memory_total_storage"));
+			String memory_used = serviceUtil.byteToMBKB(indexerJson.get("memory_used"));
 			
 			indexerJson.put("memory_quota", memory_quota);
 			indexerJson.put("memory_total_storage", memory_total_storage);
 			indexerJson.put("memory_used", memory_used);
 			
-			double a = Double.parseDouble(memory_quota);
-			double b = Double.parseDouble(memory_used);
+			double a = Double.parseDouble(memory_quota.substring(0,memory_quota.lastIndexOf(".")+1));
+			double b = Double.parseDouble(memory_used.substring(0,memory_used.lastIndexOf(".")+1));
 			DecimalFormat df = new DecimalFormat("##0.0");
 			
 			String memory_percent = df.format(b/a*100);
@@ -2824,6 +2877,175 @@ public class CouchbaseService {
 		
 		return list;
 	}
+	
+	
+	public Object deleteIndex(HttpServletRequest request) {
+		
+		// curl -X GET -u Administrator:admin123 "http://localhost:9102/api/v1/stats?pretty=true"
+		
+		if(dto == null)
+			return null;
+		
+		String name = request.getParameter("name");
+		String keyspace = request.getParameter("keyspace");
+		String primary = request.getParameter("primary");
+		
+		String statement = "DROP " ;
+		
+		// primary Index일 때
+		if(primary.length() > 0) {
+			statement += "PRIMARY INDEX ON `";
+			
+			// keyspace= `test.aa.bb` >>> `test`.aa.bb
+			
+			String bucketName = keyspace.substring(0,keyspace.indexOf("."));
+			String temp = keyspace.substring(keyspace.indexOf(".")+1);
+			keyspace = bucketName +"`." +temp;
+			statement += keyspace;
+			
+			if(!bucketName.equals("#primary")) {
+				statement = statement.replace("DROP PRIMARY INDEX ", "DROP INDEX `"+name+"` ");
+			}
+		}
+		else {
+			statement += "INDEX `" + name +"` ON `";
+			
+			// default scope,Collection일 때
+			if(keyspace.indexOf("._default") != keyspace.lastIndexOf("._default")) {
+				
+				keyspace = keyspace.replaceAll("._default", "") + "`";
+				
+				
+			// 위 상황 제외
+			}else {
+				
+				String bucketName = keyspace.substring(0,keyspace.indexOf("."));
+				String temp = keyspace.substring(keyspace.indexOf(".")+1);
+				keyspace = bucketName +"`." +temp;
+			}
+			statement += keyspace;
+		}
+		
+		System.out.println(statement);
+		
+		QueryResult result = cluster.query(statement);
+		
+		
+		return result.rowsAsObject();
+	}
+	
+	public Object getResource() {
+
+		if(dto == null)
+			return null;
+		
+		StringBuilder command = new StringBuilder();
+		command.append("curl -u ");
+		command.append(dto.getUsername());
+		command.append(":");
+		command.append(dto.getPassword());
+		command.append(" http://");
+		command.append(dto.getHostname());
+		command.append(":");
+		command.append(dto.getPortNumber());
+		command.append("/pools/default/buckets");
+		System.out.println(command);
+		
+		Map<String,Object> map = serviceUtil.curlExcute(command.toString());
+		List<Object> list = new ArrayList<Object>();
+		
+		Object obj = null;
+		try {
+			obj = parser.parse(map.get("result").toString().replaceAll(",\"allocstall\":18446744073709552000", ""));
+			JSONArray array = (JSONArray) obj;
+			
+			String[] labelArray = new String[array.size()];
+			String[] diskUsedArray = new String[array.size()];
+			String[] ramUsedArray = new String[array.size()];
+			
+			for(int i=0;i<array.size();i++) {
+				JSONObject jsonObj = (JSONObject)array.get(i);
+				Object bufferObj = jsonObj.get("basicStats");
+				JSONObject statObj = (JSONObject)bufferObj;
+				bufferObj = jsonObj.get("quota");
+				JSONObject quotaObj = (JSONObject)bufferObj;
+				
+				labelArray[i] = (String) jsonObj.get("name");
+				diskUsedArray[i] = serviceUtil.byteTo(statObj.get("diskUsed"));
+				ramUsedArray[i] = serviceUtil.byteTo(statObj.get("memUsed"));
+
+				
+//				Map<String,Object> bucketMap = new HashMap<String,Object>();
+//				
+//				bucketMap.put("name", jsonObj.get("name"));
+//				bucketMap.put("bucketType", jsonObj.get("bucketType").equals("membase") ? "couchbase" : jsonObj.get("bucketType"));
+//				bucketMap.put("itemCount", statObj.get("itemCount"));
+//				bucketMap.put("memUsed", serviceUtil.byteToMBKB(statObj.get("memUsed")));
+//				bucketMap.put("diskUsed", serviceUtil.byteToMBKB(statObj.get("diskUsed")));
+//				bucketMap.put("quotaPercentUsed", serviceUtil.doubleFormat(statObj.get("quotaPercentUsed")));
+//				bucketMap.put("ram", serviceUtil.byteToMBKB(quotaObj.get("ram")));
+				
+				
+			}
+			
+			list.add(labelArray);
+			list.add(diskUsedArray);
+			list.add(ramUsedArray);
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+
+	public Object createNewIndex(HttpServletRequest request) {
+		
+		String targets[] = request.getParameterValues("targets");
+		
+		String bucket = request.getParameter("bucket");
+		String bucketScope = request.getParameter("bucketScope");
+		String bucketScopeCollection = request.getParameter("bucketScopeCollection");
+		String primary = request.getParameter("primary");
+		String indexName = request.getParameter("indexName");
+		
+		StringBuilder statement = new StringBuilder();
+		
+		if(primary != null)
+			statement.append("Create Primary Index ");
+		else
+			statement.append("Create Index ");
+		
+		if(!indexName.equals("#primary"))
+			statement.append("`"+indexName+"`");
+		
+		statement.append(" ON `");
+		statement.append(bucket);
+		statement.append("`.");
+		statement.append(bucketScope);
+		statement.append(".");
+		statement.append(bucketScopeCollection);
+		
+		if(targets != null) {
+			statement.append(" (");
+			for(int i=0;i<targets.length;i++) {
+				statement.append("`");
+				statement.append(targets[i]);
+				statement.append("`");
+				if(i+1 != targets.length)
+					statement.append(",");
+			}
+			statement.append(")");
+		}
+		
+		System.out.println(statement.toString());
+		
+		QueryResult result = cluster.query(statement.toString());
+		
+		return result.rowsAsObject();
+	}
+
 }
+
 
 

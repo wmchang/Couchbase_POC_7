@@ -286,4 +286,33 @@ public class ServiceController {
 		
 		return couchbaseService.backupExcute(request);
 	}
+	
+	@RequestMapping(value="/getIndexList", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object getIndexList(HttpServletRequest request) {
+		
+		return couchbaseService.getIndexList(request);
+	}
+	
+	@RequestMapping(value="/deleteIndex", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object deleteIndex(HttpServletRequest request) {
+		
+		return couchbaseService.deleteIndex(request);
+	}
+	
+	@RequestMapping(value="/createNewIndex", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object createNewIndex(HttpServletRequest request) {
+		
+		return couchbaseService.createNewIndex(request);
+	}
+	
+	@RequestMapping(value="/getResource", method=RequestMethod.POST) 
+	@ResponseBody
+	public Object getResource() {
+		
+		return couchbaseService.getResource();
+	}
+	
 }	

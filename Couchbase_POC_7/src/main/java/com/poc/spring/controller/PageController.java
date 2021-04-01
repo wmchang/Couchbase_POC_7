@@ -1,6 +1,7 @@
 package com.poc.spring.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +28,20 @@ public class PageController {
 	
 	@Autowired
 	ServiceUtils serviceUtil;
+
 	
 	@RequestMapping("/")
 	public String index() { 
+
 		return "index"; 
+	} 
+	
+	@RequestMapping("/dashboard")
+	public String dashboard() { 
+		
+		couchbaseService.getResource();
+		
+		return "dashboard"; 
 	} 
 	
 	@RequestMapping("/common/header")
@@ -467,9 +478,20 @@ public class PageController {
 	@RequestMapping(value="/backup/taskHistoryPage") 
 	public String taskHistoryPage(HttpServletRequest request,Model model) { 
 		
-		JSONArray json = (JSONArray) couchbaseService.getTaskHistoryList(request);
+		List<Object> list = (List<Object>)couchbaseService.getTaskHistoryList(request);
+		JSONArray taskJson = null;
+		JSONObject backupJson = null;
 		
-		model.addAttribute("taskList", json);
+		try {
+			taskJson = (JSONArray) list.get(0);
+			backupJson = (JSONObject) list.get(1);
+		}
+		catch(NullPointerException e) {
+			return "backup/repositoryPage";
+		}
+		
+		model.addAttribute("taskList", taskJson);
+		model.addAttribute("backupList", backupJson);
 		
 		return "/backup/taskHistoryPage"; 
 	}
@@ -478,8 +500,26 @@ public class PageController {
 	public String indexPage(HttpServletRequest request,Model model) { 
 		
 		model.addAttribute("indexList", couchbaseService.getIndexList(request));
+		model.addAttribute("bucketList", couchbaseService.getBucketList());
+		model.addAttribute("bucketName", request.getParameter("bucket"));
+		model.addAttribute("scopeName", request.getParameter("bucketScope"));
+		
+		String scopeArray[] = request.getParameterValues("scopeList");
+		if( scopeArray != null) {
+			
+			List<String> scopeList = new ArrayList<String>(Arrays.asList(scopeArray));
+			model.addAttribute("scopeList", scopeList);
+		}
 		
 		return "/index/indexPage"; 
+	}
+	
+	@RequestMapping(value="/index/newIndexPage") 
+	public String indexPage(Model model) { 
+		
+		model.addAttribute("bucketList", couchbaseService.getBucketList());
+
+		return "/index/newIndexPage"; 
 	}
 	
 }
